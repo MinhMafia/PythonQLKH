@@ -1,0 +1,14 @@
+{
+    "[python]": { 
+        "editor.formatOnSave": true, 
+        "editor.defaultFormatter": "ms-python.autopep8", 
+        "editor.codeActionsOnSave": { 
+            "source.organizeImports": true 
+        }
+    },
+    "isort.args": ["--profile", "black"], 
+    "python.linting.mypyEnabled": true, 
+    "autoDocstring.docstringFormat": "numpy",
+    "terminal.integrated.enableMultiLinePasteWarning": false, 
+    "window.zoomLevel": 3
+}
