@@ -2,8 +2,8 @@
     "[python]": { 
         "editor.formatOnSave": true, 
         "editor.defaultFormatter": "ms-python.autopep8", 
-        "editor.codeActionsOnSave": { 
-            "source.organizeImports": true 
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
         }
     },
     "isort.args": ["--profile", "black"], 
