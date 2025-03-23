@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 from PIL import Image
 
+import component as comp
 import customer
 
 
@@ -10,17 +11,7 @@ def homeRun(root):
     for widget in root.winfo_children():
         widget.destroy()  # Xóa giao diện cũ để chuyển sang home
 
-    def CanGiuaCuaSo(window, width, height):
-        window.resizable(width=False, height=False)
-        screen_height = window.winfo_screenheight()
-        screen_width = window.winfo_screenwidth()
-
-        x = (screen_width - width) // 2
-        y = (screen_height - height) // 2
-
-        window.geometry(f"{width}x{height}+{x}+{y}")
-
-    CanGiuaCuaSo(root, 1000, 650)
+    comp.CanGiuaCuaSo(root, 1000, 650)
 
     # Chia thành 2 Frame
     frame_left = ctk.CTkFrame(root, width=250, height=650, corner_radius=0)
