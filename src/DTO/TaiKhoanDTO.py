@@ -43,6 +43,11 @@ class TaiKhoanDTO:
         self.TT = new_TT
     
     def __eq__(self, other):
-        if isinstance(other):
-            return self.MNV == other.MNV and self.MK == other.MK and self.TDN == other.TDN and self.MNQ == other.MNQ
-        return False
+        if not isinstance(other, self.__class__):  # Kiểm tra other có cùng class không
+            return False
+        return (
+            self.MNV == other.MNV and
+            self.MK == other.MK and
+            self.TDN == other.TDN and
+            self.MNQ == other.MNQ
+        )

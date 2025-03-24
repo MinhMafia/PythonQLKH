@@ -11,7 +11,7 @@ class TaiKhoanDAO:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "INSERT INTO TAIKHOAN (MNV, TDN, MK, MNQ, TT) VALUES (%s, %s, %s, %s, %s)"
+            sql = "INSERT INTO TAIKHOAN (MNV, TDN, MK, MNQ, TT) VALUES (%d, %s, %s, %d, %d)"
             cursor = con.cursor()
             cursor.execute(sql, (t.MNV, t.TDN, t.MK, t.MNQ, t.TT))
             con.commit()
@@ -25,7 +25,7 @@ class TaiKhoanDAO:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "UPDATE TAIKHOAN SET TDN = %s, TT = %s, MNQ = %s WHERE MNV = %s"
+            sql = "UPDATE TAIKHOAN SET TDN = %s, TT = %d, MNQ = %d WHERE MNV = %d"
             cursor = con.cursor()
             cursor.execute(sql, (t.TDN, t.TT, t.MNQ, t.MNV))
             con.commit()
@@ -69,11 +69,11 @@ class TaiKhoanDAO:
             cursor.execute(sql)
             for row in cursor.fetchall():
                 tk = TaiKhoanDTO(
-                    mnv=row["MNV"],
-                    tdn=row["TDN"],
-                    mk=row["MK"],
-                    mnq=row["MNQ"],
-                    tt=row["TT"]
+                    MNV=row["MNV"],
+                    TDN=row["TDN"],
+                    MK=row["MK"],
+                    MNQ=row["MNQ"],
+                    TT=row["TT"]
                 )
                 result.append(tk)
             DatabaseManager.close_connection(con)
@@ -86,7 +86,7 @@ class TaiKhoanDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor()
-            sql = "UPDATE TAIKHOAN SET TT = -1 WHERE MNV = %s"
+            sql = "UPDATE TAIKHOAN SET TT = -1 WHERE MNV = %d"
             cursor.execute(sql, (mnv))
             con.commit()
             result = cursor.rowcount  # Số dòng bị ảnh hưởng
@@ -101,7 +101,7 @@ class TaiKhoanDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-            sql = "SELECT * FROM TAIKHOAN WHERE MNV = %s"
+            sql = "SELECT * FROM TAIKHOAN WHERE MNV = %d"
             cursor.execute(sql, (mnv,))
             row = cursor.fetchone()
             if row:
@@ -126,3 +126,22 @@ class TaiKhoanDAO:
         except Error as e:
             print(f"Error: {e}")
         return result
+    
+    def is_account_inactive(username):
+        is_inactive = False
+        try:
+            con = DatabaseManager.get_connection()
+            cursor = con.cursor(dictionary=True)
+
+            sql = "SELECT TT FROM TAIKHOAN WHERE TDN = %s"
+            cursor.execute(sql, (username,))
+            result = cursor.fetchone()
+
+            if result and result["TT"] == -1:
+                is_inactive = True
+
+            DatabaseManager.close_connection(con)
+        except Error as e:
+            print(f"Error: {e}")
+
+        return is_inactive
