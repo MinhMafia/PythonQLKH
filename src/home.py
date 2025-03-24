@@ -7,6 +7,9 @@ import tkinter.ttk as ttk
 import component as comp
 import customer
 
+ctk.set_appearance_mode("dark")  # Chế độ tối
+ctk.set_default_color_theme("blue")  # Chủ đề màu xanh
+
 # Đường dẫn thư mục hiện tại
 currentDir = Path(__file__).parent
 
@@ -29,7 +32,7 @@ def homeRun(root):
     def Home():
         # Tải ảnh từ file
         global home_image
-        image_path = currentDir / "images" / "home_image.png"
+        image_path = currentDir / "img" / "home_image.png"
         home_image = ctk.CTkImage(light_image=Image.open(
             image_path), size=(750, 650))
 
@@ -68,7 +71,7 @@ def homeRun(root):
 
     # Mo ta user
     global avatar
-    avatar_path = currentDir / "images" / "avatar.jpg"
+    avatar_path = currentDir / "img" / "avatar.jpg"
     avatar_img = ctk.CTkImage(
         light_image=Image.open(avatar_path).resize((50, 50)))
 
@@ -100,14 +103,7 @@ def homeRun(root):
         frame_left_menu, text="Xác Minh", command=lambda: show_frame("Verify"))
     btnVerify.pack(pady=10, padx=20)
 
-    # Hiển thị trang chủ mặc định khi mở ứng dụng
     show_frame("Home")
-
-    # def on_closing():
-    #     root.destroy()  # Đóng cửa sổ Home
-    #     root_login.deiconify()  # Hiển thị lại cửa sổ Login
-
-    # root.protocol("WM_DELETE_WINDOW", on_closing)  # Gọi hàm khi nhấn nút X
 
     root.mainloop()
 
