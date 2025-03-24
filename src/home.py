@@ -68,7 +68,7 @@ def homeRun(root):
 
     # Mo ta user
     global avatar
-    avatar_path = r"D:\Nam3_HK2\python\src\images\avatar.jpg"
+    avatar_path = currentDir / "images" / "avatar.jpg"
     avatar_img = ctk.CTkImage(
         light_image=Image.open(avatar_path).resize((50, 50)))
 
