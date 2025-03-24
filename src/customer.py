@@ -28,6 +28,18 @@ def Customer(frame_right):
             if searchValue in str(customer).lower():
                 table.insert("", "end", values=customer)
 
+        search.delete(0, "end")
+
+    def search_reload():
+        search.delete(0, "end")
+
+        for row in table.get_children():
+            table.delete(row)
+
+        data = database.fetch_customers()
+        for row in data:
+            table.insert("", "end", values=row)
+
     def window_add_customer():
         add_window = ctk.CTkToplevel(frame_right)
         # add_window.geometry("400x500")
@@ -79,6 +91,9 @@ def Customer(frame_right):
         add_window.grab_set()
 
     def window_edit_customer():
+        selected_item = table.selection()
+        if not selected_item:
+            return
         add_window = ctk.CTkToplevel(frame_right)
         # add_window.geometry("400x500")
         add_window.attributes("-topmost", True)
@@ -129,6 +144,9 @@ def Customer(frame_right):
         add_window.grab_set()
 
     def window_detail_customer():
+        selected_item = table.selection()
+        if not selected_item:
+            return
         add_window = ctk.CTkToplevel(frame_right)
         # add_window.geometry("400x500")
         add_window.attributes("-topmost", True)
@@ -178,6 +196,13 @@ def Customer(frame_right):
 
         add_window.grab_set()
 
+    def on_select(event):
+        selected = table.selection()  # Lấy danh sách các dòng được chọn
+        if selected:
+            btnDetail.configure(state="normal")  # Bật nút nếu có dòng được chọn
+        else:
+            btnDetail.configure(state="disabled")  # Vô hiệu hóa nếu không có dòng nào được chọn
+
     #
     frame_right.master.title("Quản lý khách hàng")
 
@@ -203,6 +228,9 @@ def Customer(frame_right):
     searchBtn = ctk.CTkButton(
         frame_search, text="🔍 Tìm kiếm", width=85, command=searchCustomerBtn)
     searchBtn.pack(side="left", padx=5)
+
+    searchReload = ctk.CTkButton(frame_search,text="⟳",width=5, height=5,command= search_reload)
+    searchReload.pack(side="right",padx=5)
 
     # Frame chứa các nút
     frame_buttons = ctk.CTkFrame(
@@ -248,7 +276,10 @@ def Customer(frame_right):
     table.column("SĐT", width=150, anchor="center")
     table.column("Email", width=250, anchor="w")
 
- # Thêm dữ liệu mẫu
+    # Gán sự kiện chọn dòng trong bảng
+    table.bind("<<TreeviewSelect>>", on_select)
+    
+    # Thêm dữ liệu mẫu
     data = database.fetch_customers()
     for row in data:
         table.insert("", "end", values=row)
