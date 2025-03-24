@@ -1,8 +1,184 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
+import component as comp
+import database
 
 
 def Customer(frame_right):
+    # Phần def
+    # def cho phần search khi viết
+    def searchCustomerEntry(event=None):
+        searchValue = search.get().strip().lower()
+
+        for row in table.get_children():
+            table.delete(row)
+
+        for customer in data:
+            if searchValue in str(customer).lower():
+                table.insert("", "end", values=customer)
+
+    # def cho phần search khi nhấn button
+    def searchCustomerBtn():
+        searchValue = search.get().strip().lower()
+
+        for row in table.get_children():
+            table.delete(row)
+
+        for customer in data:
+            if searchValue in str(customer).lower():
+                table.insert("", "end", values=customer)
+
+    def window_add_customer():
+        add_window = ctk.CTkToplevel(frame_right)
+        # add_window.geometry("400x500")
+        add_window.attributes("-topmost", True)
+        comp.CanGiuaCuaSo(add_window, 400, 500)
+
+        ctk.CTkLabel(add_window, text="Thêm khách hàng",
+                     font=("Arial", 24), text_color="#00FA9A").pack(pady=8)
+
+        ctk.CTkLabel(add_window, text="Mã Căn cước công dân:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_cccd = ctk.CTkEntry(add_window, width=300)
+        entry_cccd.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Họ và Tên:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_name = ctk.CTkEntry(add_window, width=300)
+        entry_name.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="SĐT:", font=("Arial", 14)).pack(pady=5)
+        entry_phone = ctk.CTkEntry(add_window, width=300)
+        entry_phone.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Email:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_email = ctk.CTkEntry(add_window, width=300)
+        entry_email.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Địa chỉ:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_address = ctk.CTkEntry(add_window, width=300)
+        entry_address.pack(pady=5)
+
+        frame_btn = ctk.CTkFrame(add_window, fg_color="transparent")
+        frame_btn.pack(pady=15)
+
+        btn_cancel = ctk.CTkButton(
+            frame_btn, text="Hủy bỏ", fg_color="gray", command=add_window.destroy)
+        btn_cancel.pack(side="left", padx=10)
+
+        def confirm_action():
+            print("Da them khach hang")
+            add_window.destroy()
+
+        btn_confirm = ctk.CTkButton(
+            frame_btn, text="Xác nhận", fg_color="green", command=confirm_action)
+        btn_confirm.pack(side="right", padx=10)
+
+        add_window.grab_set()
+
+    def window_edit_customer():
+        add_window = ctk.CTkToplevel(frame_right)
+        # add_window.geometry("400x500")
+        add_window.attributes("-topmost", True)
+        comp.CanGiuaCuaSo(add_window, 400, 500)
+
+        ctk.CTkLabel(add_window, text="Sửa thông tin",
+                     font=("Arial", 24), text_color="#00FA9A").pack(pady=8)
+
+        ctk.CTkLabel(add_window, text="Mã Căn cước công dân:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_cccd = ctk.CTkEntry(add_window, width=300, state="disabled")
+        entry_cccd.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Họ và Tên:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_name = ctk.CTkEntry(add_window, width=300)
+        entry_name.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="SĐT:", font=("Arial", 14)).pack(pady=5)
+        entry_phone = ctk.CTkEntry(add_window, width=300)
+        entry_phone.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Email:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_email = ctk.CTkEntry(add_window, width=300)
+        entry_email.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Địa chỉ:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_address = ctk.CTkEntry(add_window, width=300)
+        entry_address.pack(pady=5)
+
+        frame_btn = ctk.CTkFrame(add_window, fg_color="transparent")
+        frame_btn.pack(pady=15)
+
+        btn_cancel = ctk.CTkButton(
+            frame_btn, text="Hủy bỏ", fg_color="gray", command=add_window.destroy)
+        btn_cancel.pack(side="left", padx=10)
+
+        def confirm_action():
+            print("Da them khach hang")
+            add_window.destroy()
+
+        btn_confirm = ctk.CTkButton(
+            frame_btn, text="Xác nhận", fg_color="green", command=confirm_action)
+        btn_confirm.pack(side="right", padx=10)
+
+        add_window.grab_set()
+
+    def window_detail_customer():
+        add_window = ctk.CTkToplevel(frame_right)
+        # add_window.geometry("400x500")
+        add_window.attributes("-topmost", True)
+        comp.CanGiuaCuaSo(add_window, 400, 500)
+
+        ctk.CTkLabel(add_window, text="Chi tiết khách hàng",
+                     font=("Arial", 24), text_color="#00FA9A").pack(pady=8)
+
+        ctk.CTkLabel(add_window, text="Mã Căn cước công dân:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_cccd = ctk.CTkEntry(add_window, width=300, state="disabled")
+        entry_cccd.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Họ và Tên:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_name = ctk.CTkEntry(add_window, width=300, state="disabled")
+        entry_name.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="SĐT:", font=("Arial", 14)).pack(pady=5)
+        entry_phone = ctk.CTkEntry(add_window, width=300, state="disabled")
+        entry_phone.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Email:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_email = ctk.CTkEntry(add_window, width=300, state="disabled")
+        entry_email.pack(pady=5)
+
+        ctk.CTkLabel(add_window, text="Địa chỉ:",
+                     font=("Arial", 14)).pack(pady=5)
+        entry_address = ctk.CTkEntry(add_window, width=300, state="disabled")
+        entry_address.pack(pady=5)
+
+        frame_btn = ctk.CTkFrame(add_window, fg_color="transparent")
+        frame_btn.pack(pady=15)
+
+        btn_cancel = ctk.CTkButton(
+            frame_btn, text="Hủy bỏ", fg_color="gray", command=add_window.destroy)
+        btn_cancel.pack(side="left", padx=10)
+
+        def confirm_action():
+            print("Da them khach hang")
+            add_window.destroy()
+
+        btn_confirm = ctk.CTkButton(
+            frame_btn, text="Xác nhận", fg_color="green", command=confirm_action)
+        btn_confirm.pack(side="right", padx=10)
+
+        add_window.grab_set()
+
+    #
     frame_right.master.title("Quản lý khách hàng")
 
     # Chia frame_right thành head, body
@@ -22,8 +198,10 @@ def Customer(frame_right):
     search = ctk.CTkEntry(frame_search,
                           placeholder_text="Nhập nội dung tìm kiếm", width=180)
     search.pack(side="left", padx=5)
+    search.bind("<KeyRelease>", searchCustomerEntry)
 
-    searchBtn = ctk.CTkButton(frame_search, text="🔍 Tìm kiếm", width=85)
+    searchBtn = ctk.CTkButton(
+        frame_search, text="🔍 Tìm kiếm", width=85, command=searchCustomerBtn)
     searchBtn.pack(side="left", padx=5)
 
     # Frame chứa các nút
@@ -32,10 +210,10 @@ def Customer(frame_right):
     frame_buttons.pack(side="right", padx=10, pady=10)
 
     btnThem = ctk.CTkButton(frame_buttons,
-                            text="➕ Thêm", width=80, height=25)
+                            text="➕ Thêm", width=80, height=25, command=window_add_customer)
     btnThem.pack(side="left", padx=10, pady=10)
     btnSua = ctk.CTkButton(frame_buttons,
-                           text="✏ Sửa", width=80, height=25)
+                           text="✏ Sửa", width=80, height=25, command=window_edit_customer)
     btnSua.pack(side="left", padx=10, pady=10)
 
     btnXoa = ctk.CTkButton(frame_buttons,
@@ -43,7 +221,7 @@ def Customer(frame_right):
     btnXoa.pack(side="left", padx=10, pady=10)
 
     btnDetail = ctk.CTkButton(
-        frame_buttons, text="📄 Chi tiết", width=80, height=25)
+        frame_buttons, text="📄 Chi tiết", width=80, height=25, command=window_detail_customer)
     btnDetail.pack(side="left", padx=10, pady=10)
 
     # ---------------------- BẢNG DANH SÁCH KHÁCH HÀNG --------------
@@ -71,11 +249,7 @@ def Customer(frame_right):
     table.column("Email", width=250, anchor="w")
 
  # Thêm dữ liệu mẫu
-    data = [
-        (1, "Nguyễn Văn A", "0123456789", "a@gmail.com"),
-        (2, "Trần Thị B", "0987654321", "b@gmail.com"),
-        (3, "Lê Văn C", "0345678901", "c@gmail.com"),
-    ]
+    data = database.fetch_customers()
     for row in data:
         table.insert("", "end", values=row)
 
