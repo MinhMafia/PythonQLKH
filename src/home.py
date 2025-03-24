@@ -1,9 +1,14 @@
+from PIL import Image
+from pathlib import Path
+
 import customtkinter as ctk
 import tkinter.ttk as ttk
-from PIL import Image
 
 import component as comp
 import customer
+
+# Đường dẫn thư mục hiện tại
+currentDir = Path(__file__).parent
 
 
 def homeRun(root):
@@ -24,7 +29,7 @@ def homeRun(root):
     def Home():
         # Tải ảnh từ file
         global home_image
-        image_path = r"D:\Nam3_HK2\python\src\images\home_image.png"
+        image_path = currentDir / "images" / "home_image.png"
         home_image = ctk.CTkImage(light_image=Image.open(
             image_path), size=(750, 650))
 
