@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import component as comp
+import database
 
 
 def Customer(frame_right):
@@ -60,6 +61,23 @@ def Customer(frame_right):
         entry_address = ctk.CTkEntry(add_window, width=300)
         entry_address.pack(pady=5)
 
+        frame_btn = ctk.CTkFrame(add_window, fg_color="transparent")
+        frame_btn.pack(pady=15)
+
+        btn_cancel = ctk.CTkButton(
+            frame_btn, text="Hủy bỏ", fg_color="gray", command=add_window.destroy)
+        btn_cancel.pack(side="left", padx=10)
+
+        def confirm_action():
+            print("Da them khach hang")
+            add_window.destroy()
+
+        btn_confirm = ctk.CTkButton(
+            frame_btn, text="Xác nhận", fg_color="green", command=confirm_action)
+        btn_confirm.pack(side="right", padx=10)
+
+        add_window.grab_set()
+
     def window_edit_customer():
         add_window = ctk.CTkToplevel(frame_right)
         # add_window.geometry("400x500")
@@ -93,6 +111,23 @@ def Customer(frame_right):
         entry_address = ctk.CTkEntry(add_window, width=300)
         entry_address.pack(pady=5)
 
+        frame_btn = ctk.CTkFrame(add_window, fg_color="transparent")
+        frame_btn.pack(pady=15)
+
+        btn_cancel = ctk.CTkButton(
+            frame_btn, text="Hủy bỏ", fg_color="gray", command=add_window.destroy)
+        btn_cancel.pack(side="left", padx=10)
+
+        def confirm_action():
+            print("Da them khach hang")
+            add_window.destroy()
+
+        btn_confirm = ctk.CTkButton(
+            frame_btn, text="Xác nhận", fg_color="green", command=confirm_action)
+        btn_confirm.pack(side="right", padx=10)
+
+        add_window.grab_set()
+
     def window_detail_customer():
         add_window = ctk.CTkToplevel(frame_right)
         # add_window.geometry("400x500")
@@ -125,6 +160,23 @@ def Customer(frame_right):
                      font=("Arial", 14)).pack(pady=5)
         entry_address = ctk.CTkEntry(add_window, width=300, state="disabled")
         entry_address.pack(pady=5)
+
+        frame_btn = ctk.CTkFrame(add_window, fg_color="transparent")
+        frame_btn.pack(pady=15)
+
+        btn_cancel = ctk.CTkButton(
+            frame_btn, text="Hủy bỏ", fg_color="gray", command=add_window.destroy)
+        btn_cancel.pack(side="left", padx=10)
+
+        def confirm_action():
+            print("Da them khach hang")
+            add_window.destroy()
+
+        btn_confirm = ctk.CTkButton(
+            frame_btn, text="Xác nhận", fg_color="green", command=confirm_action)
+        btn_confirm.pack(side="right", padx=10)
+
+        add_window.grab_set()
 
     #
     frame_right.master.title("Quản lý khách hàng")
@@ -197,11 +249,7 @@ def Customer(frame_right):
     table.column("Email", width=250, anchor="w")
 
  # Thêm dữ liệu mẫu
-    data = [
-        (1, "Nguyễn Văn A", "0123456789", "a@gmail.com"),
-        (2, "Trần Thị B", "0987654321", "b@gmail.com"),
-        (3, "Lê Văn C", "0345678901", "c@gmail.com"),
-    ]
+    data = database.fetch_customers()
     for row in data:
         table.insert("", "end", values=row)
 
