@@ -57,3 +57,6 @@ class TaiKhoanBUS:
     def find_tai_khoan_by_ma_nhan_vien(self, ma_nhan_vien):
         return next((tk for tk in self.get_tai_khoan_all() if tk.MNV == ma_nhan_vien), None)
 
+    def kt(self, username):
+            """Kiểm tra xem tài khoản có bị vô hiệu hóa không"""
+            return TaiKhoanDAO.is_account_inactive(username)

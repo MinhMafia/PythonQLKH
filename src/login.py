@@ -27,15 +27,18 @@ def load_users():
 #     TaiKhoanBUS.add_acc()
 
 def login():
-    username = entry_username.get()
-    password = entry_password.get()
+    TDN = entry_username.get()
+    MK = entry_password.get()
     users = load_users()
-
-    if username in users and users[username] == hash_password(password):
-        messagebox.showinfo("Thành công", "Đăng nhập thành công!")
-    else:
+    check = True
+    for user in users:
+        if user.TDN == TDN and user.MK == MK:
+            messagebox.showinfo("Thành công", "Đăng nhập thành công!")
+            check = False
+    if check:
         messagebox.showerror("Lỗi", "Đăng nhập thất bại!")
-
+            
+        
 def open_register_window():
 
     root.withdraw()
