@@ -112,9 +112,9 @@ def homeRun(root):
 
     show_frame("Home")
 
-    root.mainloop()
+    # root.mainloop()
 
 
-if __name__ == "__main__":
-    root = ctk.CTk()
-    homeRun(root)
+# if __name__ == "__main__":
+#     root = ctk.CTk()
+#     homeRun(root)

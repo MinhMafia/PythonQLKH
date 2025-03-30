@@ -1,4 +1,3 @@
-from BUS.TaiKhoanBUS import TaiKhoanBUS
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import PhotoImage
@@ -6,16 +5,13 @@ from PIL import Image, ImageTk
 import hashlib
 import os
 
+from BUS.TaiKhoanBUS import TaiKhoanBUS
+
+import home
+import component
+
+
 listTaiKhoan = []
-def CanGiuaCuaSo(window, width, height):
-    window.resizable(width=False, height=False)
-    screen_height = window.winfo_screenheight()
-    screen_width = window.winfo_screenwidth()
-
-    x = (screen_width - width) // 2
-    y = (screen_height - height) // 2
-
-    window.geometry(f"{width}x{height}+{x}+{y}")
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -35,6 +31,7 @@ def login():
         if user.TDN == TDN and user.MK == MK:
             messagebox.showinfo("Thành công", "Đăng nhập thành công!")
             check = False
+            home.homeRun(root)
     if check:
         messagebox.showerror("Lỗi", "Đăng nhập thất bại!")
             
@@ -46,7 +43,7 @@ def open_register_window():
     register_window = tk.Toplevel(root)
     register_window.title("Đăng ký")
     root.configure(background="#4B0082")
-    CanGiuaCuaSo(register_window, 450, 300)
+    component.CanGiuaCuaSo(register_window, 450, 300)
 
 
 
@@ -118,7 +115,7 @@ def open_register_window():
 root = tk.Tk()
 root.title("Đăng nhập")
 root.configure(background="white")
-CanGiuaCuaSo(root, 500, 250)
+component.CanGiuaCuaSo(root, 500, 250)
 
 main_frame = tk.Frame(root, bg="white")
 main_frame.pack(fill="both", expand=True)

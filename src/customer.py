@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import component as comp
-import database
 
 
 def Customer(frame_right):

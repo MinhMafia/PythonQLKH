@@ -10,8 +10,8 @@ class DatabaseManager:
                 host="localhost",
                 database="quanlykhachhang",
                 user="root",
-                password="1234",
-                port=3306
+                password="",
+                port=3307
             )
             if connection.is_connected():
                 print("Kết nối thành công đến cơ sở dữ liệu!")

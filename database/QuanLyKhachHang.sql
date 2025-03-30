@@ -1,5 +1,5 @@
 /*Chạy bằng MySQL*/
-DROP DATABASE quanlykhachhang;
+DROP DATABASE IF EXISTS quanlykhachhang;
 CREATE DATABASE quanlykhachhang;
 USE quanlykhachhang;
 
