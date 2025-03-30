@@ -1,9 +1,19 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
+
+from BUS.KhachHangBUS import KhachHangBUS
 import component as comp
+
+def load_khachHang():
+    khachHangBUS = KhachHangBUS()  # Tạo đối tượng
+    return khachHangBUS.get_khach_hang_all()  # Gọi phương thức qua đối tượng
 
 
 def Customer(frame_right):
+
+    customers = load_khachHang()
+
+
     # Phần def
     # def cho phần search khi viết
     def searchCustomerEntry(event=None):
@@ -252,7 +262,7 @@ def Customer(frame_right):
     btnDetail.pack(side="left", padx=10, pady=10)
 
     # ---------------------- BẢNG DANH SÁCH KHÁCH HÀNG --------------
-    columns = ("ID", "Họ và Tên", "SĐT", "Email")
+    columns = ("MKH", "Họ và Tên", "SĐT", "Email")
 
     style = ttk.Style()
     # Kích cỡ chữ của nội dung bảng
@@ -264,13 +274,13 @@ def Customer(frame_right):
                          columns=columns, show="headings", height=20)
 
     # Định nghĩa tiêu đề cột
-    table.heading("ID", text="ID")
+    table.heading("MKH", text="MKH")
     table.heading("Họ và Tên", text="Họ và Tên")
     table.heading("SĐT", text="SĐT")
     table.heading("Email", text="Email")
 
     # Căn chỉnh độ rộng cột
-    table.column("ID", width=50, anchor="center")
+    table.column("MKH", width=50, anchor="center")
     table.column("Họ và Tên", width=250, anchor="w")
     table.column("SĐT", width=150, anchor="center")
     table.column("Email", width=250, anchor="w")
@@ -279,8 +289,7 @@ def Customer(frame_right):
     table.bind("<<TreeviewSelect>>", on_select)
     
     # Thêm dữ liệu mẫu
-    data = database.fetch_customers()
-    for row in data:
+    for row in customers:
         table.insert("", "end", values=row)
 
     # Thêm thanh cuộn (Scrollbar)

@@ -1,19 +1,19 @@
 from mysql.connector import Error
-from DTO.TaiKhoanDTO import TaiKhoanDTO
+from DTO.KhanhHangDTO import KhachHangDTO
 from config.DatabaseManager import DatabaseManager
 
-class TaiKhoanDAO:
+class KhachHangDAO:
     @classmethod
     def get_instance(cls):
         return cls()
 
-    def insert(self, t: TaiKhoanDTO) -> int:
+    def insert(self, kh: KhachHangDTO) -> int:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "INSERT INTO TAIKHOAN (MNV, TDN, MK, MNQ, TT) VALUES (%d, %s, %s, %d, %d)"
+            sql = "INSERT INTO KHACHHANG (MKH, HOTEN, NGAYTHAMGIA, DIACHI, SDT, EMAIL, TT) VALUES (%s, %s, %s, %s, %s, %s, %s)"
             cursor = con.cursor()
-            cursor.execute(sql, (t.MNV, t.TDN, t.MK, t.MNQ, t.TT))
+            cursor.execute(sql, (kh.MKH, kh.HOTEN, kh.NGAYTHAMGIA, kh.DIACHI, kh.SDT, kh.EMAIL, kh.TT))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
@@ -21,13 +21,13 @@ class TaiKhoanDAO:
             print(f"Error: {e}")
         return result
 
-    def update(self, t: TaiKhoanDTO) -> int:
+    def update(self, kh: KhachHangDTO) -> int:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "UPDATE TAIKHOAN SET TDN = %s, TT = %d, MNQ = %d WHERE MNV = %d"
+            sql = "UPDATE KHACHHANG SET HOTEN = %s, DIACHI = %s, SDT = %s, EMAIL = %s, TT = %s WHERE MKH = %s"
             cursor = con.cursor()
-            cursor.execute(sql, (t.TDN, t.TT, t.MNQ, t.MNV))
+            cursor.execute(sql, (kh.HOTEN, kh.DIACHI, kh.SDT, kh.EMAIL, kh.TT, kh.MKH))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
@@ -35,113 +35,86 @@ class TaiKhoanDAO:
             print(f"Error: {e}")
         return result
 
-    def update_tt_cxl(self, email: str) -> int:
-        result = 0
-        try:
-            con = DatabaseManager.get_connection()
-            sql = "UPDATE TAIKHOAN TK JOIN NHANVIEN NV ON TK.MNV = NV.MNV SET TK.TT = 2 WHERE NV.EMAIL = %s"
-            cursor = con.cursor()
-            cursor.execute(sql, (email,))
-            con.commit()
-            result = cursor.rowcount
-            DatabaseManager.close_connection(con)
-        except Error as e:
-            print(f"Error: {e}")
-        return result
-
-    def update_pass(self, email: str, password: str):
-        try:
-            con = DatabaseManager.get_connection()
-            sql = "UPDATE TAIKHOAN TK JOIN NHANVIEN NV ON TK.MNV = NV.MNV SET MK = %s WHERE NV.EMAIL = %s"
-            cursor = con.cursor()
-            cursor.execute(sql, (password, email))
-            con.commit()
-            DatabaseManager.close_connection(con)
-        except Error as e:
-            print(f"Error: {e}")
-        
     def select_all():
         result = []
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-            sql = "SELECT * FROM taikhoan WHERE TT IN (0, 1, 2)"
+            sql = "SELECT * FROM KHACHHANG WHERE TT IN (0, 1, 2)"
             cursor.execute(sql)
             for row in cursor.fetchall():
-                tk = TaiKhoanDTO(
-                    MNV=row["MNV"],
-                    TDN=row["TDN"],
-                    MK=row["MK"],
-                    MNQ=row["MNQ"],
+                kh = KhachHangDTO(
+                    MKH=row["MKH"],
+                    HOTEN=row["HOTEN"],
+                    NGAYTHAMGIA=row["NGAYTHAMGIA"],
+                    DIACHI=row["DIACHI"],
+                    SDT=row["SDT"],
+                    EMAIL=row["EMAIL"],
                     TT=row["TT"]
                 )
-                result.append(tk)
+                result.append(kh)
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
         return result
     
-    def delete(mnv):
+    def delete(self, mkh):
         result = 0
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor()
-            sql = "UPDATE TAIKHOAN SET TT = -1 WHERE MNV = %d"
-            cursor.execute(sql, (mnv))
+            sql = "UPDATE KHACHHANG SET TT = -1 WHERE MKH = %s"
+            cursor.execute(sql, (mkh,))
             con.commit()
-            result = cursor.rowcount  # Số dòng bị ảnh hưởng
+            result = cursor.rowcount
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
         return result
 
     @staticmethod
-    def select_by_id(mnv):
+    def select_by_id(mkh):
         result = None
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-            sql = "SELECT * FROM TAIKHOAN WHERE MNV = %d"
-            cursor.execute(sql, (mnv,))
+            sql = "SELECT * FROM KHACHHANG WHERE MKH = %s"
+            cursor.execute(sql, (mkh,))
             row = cursor.fetchone()
             if row:
-                result = TaiKhoanDTO(row["MNV"], row["TDN"], row["MK"], row["MNQ"], row["TT"])
-            DatabaseManager.close_connection(con)
-        except Error as e:
-            print(f"Error: {e}")
-        return result
-
-    @staticmethod
-    def select_by_user(tdn):
-        result = None
-        try:
-            con = DatabaseManager.get_connection()
-            cursor = con.cursor(dictionary=True)
-            sql = "SELECT * FROM TAIKHOAN WHERE TDN = %s"
-            cursor.execute(sql, (tdn,))
-            row = cursor.fetchone()
-            if row:
-                result = TaiKhoanDTO(row["MNV"], row["TDN"], row["MK"], row["MNQ"], row["TT"])
+                result = KhachHangDTO(row["MKH"], row["HOTEN"], row["NGAYTHAMGIA"], row["DIACHI"], row["SDT"], row["EMAIL"], row["TT"])
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
         return result
     
-    def is_account_inactive(username):
+    @staticmethod
+    def select_by_email(email):
+        result = None
+        try:
+            con = DatabaseManager.get_connection()
+            cursor = con.cursor(dictionary=True)
+            sql = "SELECT * FROM KHACHHANG WHERE EMAIL = %s"
+            cursor.execute(sql, (email,))
+            row = cursor.fetchone()
+            if row:
+                result = KhachHangDTO(row["MKH"], row["HOTEN"], row["NGAYTHAMGIA"], row["DIACHI"], row["SDT"], row["EMAIL"], row["TT"])
+            DatabaseManager.close_connection(con)
+        except Error as e:
+            print(f"Error: {e}")
+        return result
+    
+    def is_account_inactive(self, email):
         is_inactive = False
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-
-            sql = "SELECT TT FROM TAIKHOAN WHERE TDN = %s"
-            cursor.execute(sql, (username,))
+            sql = "SELECT TT FROM KHACHHANG WHERE EMAIL = %s"
+            cursor.execute(sql, (email,))
             result = cursor.fetchone()
-
             if result and result["TT"] == -1:
                 is_inactive = True
-
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
-
         return is_inactive

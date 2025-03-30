@@ -29,7 +29,7 @@ def login():
     check = True
     for user in users:
         if user.TDN == TDN and user.MK == MK:
-            messagebox.showinfo("Thành công", "Đăng nhập thành công!")
+            # messagebox.showinfo("Thành công", "Đăng nhập thành công!")
             check = False
             home.homeRun(root)
     if check:
@@ -146,6 +146,7 @@ user_label = tk.Label(frame_user, image=user_icon, bg="white")
 user_label.pack(side="left", padx=5)
 entry_username = tk.Entry(frame_user, font=("Arial", 12), bd=0)
 entry_username.pack(side="left", fill="x", expand=True)
+entry_username.insert(0, "admin")
 
 
 frame_pass = tk.Frame(right_frame, bg="white", bd=2, relief="groove")
@@ -154,6 +155,7 @@ pass_label = tk.Label(frame_pass, image=lock_icon, bg="white")
 pass_label.pack(side="left", padx=5)
 entry_password = tk.Entry(frame_pass, font=("Arial", 12), show="*", bd=0)
 entry_password.pack(side="left", fill="x", expand=True)
+entry_password.insert(0, "123456")
 
 
 forgot_label = tk.Label(right_frame, text="Quên mật khẩu?", fg="black", bg="white", cursor="hand2")

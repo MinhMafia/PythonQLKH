@@ -1,61 +1,48 @@
-from DAO.TaiKhoanDAO import TaiKhoanDAO
-# from DAO.NhomQuyenDAO import NhomQuyenDAO
+from DAO.KhachHangDAO import KhachHangDAO
 
-class TaiKhoanBUS:
+class KhachHangBUS:
     def __init__(self):
-        self.listTaiKhoan = TaiKhoanDAO.select_all()
-        # self.nhomQuyenDAO = NhomQuyenDAO()
+        self.listKhachHang = KhachHangDAO.select_all()
 
-    def get_tai_khoan_all():
-        return TaiKhoanDAO.select_all()
+    def get_khach_hang_all(self):
+        return KhachHangDAO.select_all()
 
-    def get_tai_khoan(self, index):
-        return self.listTaiKhoan[index]
+    def get_khach_hang(self, index):
+        return self.listKhachHang[index]
 
-    def get_tai_khoan_by_manv(self, manv):
-        for index, tk in enumerate(self.listTaiKhoan):
-            if tk.MNV == manv:
+    def get_khach_hang_by_makh(self, makh):
+        for index, kh in enumerate(self.listKhachHang):
+            if kh.MKH == makh:
                 return index
         return -1
 
-    def get_tai_khoan_by_makh(self, manv):
-        for index, tk in enumerate(self.listTaikhoanKH):
-            if tk.MNV == manv:
-                return index
-        return -1
+    def add_khach_hang(self, kh):
+        KhachHangDAO.insert(kh)
 
-    # def get_nhom_quyen_dto(self, manhom):
-    #     return self.nhomQuyenDAO.select_by_id(str(manhom))
+    def update_khach_hang(self, kh):
+        KhachHangDAO.update(kh)
 
-    def add_acc(self, tk):
-        TaiKhoanDAO.insert(tk)
-
-    def update_acc(self, tk):
-        TaiKhoanDAO.update(tk)
-
-    def check_tdn(self, tdn):
-        tk = TaiKhoanDAO.select_by_user(tdn)
-        return tk is None
-
-    def delete_acc(self, manv):
-        TaiKhoanDAO.delete(manv)
+    def delete_khach_hang(self, makh):
+        KhachHangDAO.delete(makh)
 
     def search(self, txt, type):
         txt = txt.lower()
         result = []
         if type == "Tất cả":
-            result = [tk for tk in self.listTaiKhoan if txt in str(tk.MNV) or txt in tk.TDN.lower()]
-        elif type == "Mã nhân viên":
-            result = [tk for tk in self.listTaiKhoan if txt in str(tk.MNV)]
-        elif type == "Tên đăng nhập":
-            result = [tk for tk in self.listTaiKhoan if txt in tk.TDN.lower()]
+            result = [kh for kh in self.listKhachHang if txt in str(kh.MKH) or txt in kh.HOTEN.lower() or txt in kh.EMAIL.lower()]
+        elif type == "Mã khách hàng":
+            result = [kh for kh in self.listKhachHang if txt in str(kh.MKH)]
+        elif type == "Họ tên":
+            result = [kh for kh in self.listKhachHang if txt in kh.HOTEN.lower()]
+        elif type == "Email":
+            result = [kh for kh in self.listKhachHang if txt in kh.EMAIL.lower()]
         return result
 
-    def doi_mat_khau(self, id, new_password):
-        TaiKhoanDAO.update_pass_by_mnv(id, new_password)
+    def doi_email(self, makh, new_email):
+        KhachHangDAO.update_email_by_makh(makh, new_email)
 
-    def find_tai_khoan_by_ma_nhan_vien(self, ma_nhan_vien):
-        return next((tk for tk in self.get_tai_khoan_all() if tk.MNV == ma_nhan_vien), None)
+    def find_khach_hang_by_ma_khach_hang(self, ma_khach_hang):
+        return next((kh for kh in self.get_khach_hang_all() if kh.MKH == ma_khach_hang), None)
 
-    def kt(self, username):
-            return TaiKhoanDAO.is_account_inactive(username)
+    def kt(self, email):
+        return KhachHangDAO.is_account_inactive(email)

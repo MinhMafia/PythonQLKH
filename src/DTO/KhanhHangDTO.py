@@ -1,53 +1,73 @@
-class TaiKhoanDTO:
-    MNV: int
-    MK: str 
-    TDN: str
-    MNQ: int 
-    TT: int
+class KhachHangDTO:
+    MKH: int         # Mã khách hàng
+    HOTEN: str       # Họ và tên KH
+    NGAYTHAMGIA: str # Ngày tạo dữ liệu
+    DIACHI: str      # Địa chỉ
+    SDT: str         # Số điện thoại
+    EMAIL: str       # Email
+    TT: int          # Trạng thái
 
-    def __init__(self, MNV, MK, TDN, MNQ, TT):
-        self.MNV = MNV
-        self.MK = MK
-        self.TDN = TDN
-        self.MNQ = MNQ
+    def __init__(self, MKH, HOTEN, NGAYTHAMGIA, DIACHI, SDT, EMAIL, TT):
+        self.MKH = MKH
+        self.HOTEN = HOTEN
+        self.NGAYTHAMGIA = NGAYTHAMGIA
+        self.DIACHI = DIACHI
+        self.SDT = SDT
+        self.EMAIL = EMAIL
         self.TT = TT
 
-    def MNV(self):
-        return self.MNV
+    # Getter và Setter
+    def get_MKH(self):
+        return self.MKH
     
-    def MNV(self, new_MNV):
-        self.MNV = new_MNV
+    def set_MKH(self, new_MKH):
+        self.MKH = new_MKH
 
-    def MK(self):
-        return self.MK
+    def get_HOTEN(self):
+        return self.HOTEN
     
-    def MK(self, new_MK):
-        self.MK = new_MK
+    def set_HOTEN(self, new_HOTEN):
+        self.HOTEN = new_HOTEN
+
+    def get_NGAYTHAMGIA(self):
+        return self.NGAYTHAMGIA
     
-    def TDN(self):
-        return self.TDN
+    def set_NGAYTHAMGIA(self, new_NGAYTHAMGIA):
+        self.NGAYTHAMGIA = new_NGAYTHAMGIA
+
+    def get_DIACHI(self):
+        return self.DIACHI
     
-    def TDN(self, new_TDN):
-        self.TDN = new_TDN
+    def set_DIACHI(self, new_DIACHI):
+        self.DIACHI = new_DIACHI
+
+    def get_SDT(self):
+        return self.SDT
     
-    def MNQ(self):
-        return self.MNQ
+    def set_SDT(self, new_SDT):
+        self.SDT = new_SDT
+
+    def get_EMAIL(self):
+        return self.EMAIL
     
-    def MNQ(self, new_MNQ):
-        self.MNQ = new_MNQ
-    
-    def TT(self):
+    def set_EMAIL(self, new_EMAIL):
+        self.EMAIL = new_EMAIL
+
+    def get_TT(self):
         return self.TT
     
-    def TT(self, new_TT):
+    def set_TT(self, new_TT):
         self.TT = new_TT
-    
+
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):  # Kiểm tra other có cùng class không
+        if not isinstance(other, KhachHangDTO):
             return False
         return (
-            self.MNV == other.MNV and
-            self.MK == other.MK and
-            self.TDN == other.TDN and
-            self.MNQ == other.MNQ
+            self.MKH == other.MKH and
+            self.HOTEN == other.HOTEN and
+            self.NGAYTHAMGIA == other.NGAYTHAMGIA and
+            self.DIACHI == other.DIACHI and
+            self.SDT == other.SDT and
+            self.EMAIL == other.EMAIL and
+            self.TT == other.TT
         )
