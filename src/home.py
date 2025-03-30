@@ -6,6 +6,7 @@ import tkinter.ttk as ttk
 
 import component as comp
 import customer
+import customerTest
 
 ctk.set_appearance_mode("dark")  # Chế độ tối
 ctk.set_default_color_theme("blue")  # Chủ đề màu xanh
@@ -56,6 +57,8 @@ def homeRun(root):
                 customer.Customer(frame_right)
             case "Verify":
                 Verify()
+            case "khTest":
+                customerTest.CustomerTest(frame_right)
             case _:
                 label = ctk.CTkLabel(
                     frame_right, text="❌ 404 Not Found", font=("Arial", 50))
@@ -102,6 +105,10 @@ def homeRun(root):
     btnVerify = ctk.CTkButton(
         frame_left_menu, text="Xác Minh", command=lambda: show_frame("Verify"))
     btnVerify.pack(pady=10, padx=20)
+
+    btnCusTest = ctk.CTkButton(
+        frame_left_menu, text="KH test", command=lambda: show_frame("khTest"))
+    btnCusTest.pack(pady=10, padx=20)
 
     show_frame("Home")
 
