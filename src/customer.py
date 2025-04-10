@@ -290,7 +290,7 @@ def Customer(frame_right):
     
     # Thêm dữ liệu mẫu
     for row in customers:
-        table.insert("", "end", values=row)
+        table.insert("", "end", values=(row.MKH, row.HOTEN, row.SDT, row.EMAIL))
 
     # Thêm thanh cuộn (Scrollbar)
     scroll = ttk.Scrollbar(frame_body_customer,
