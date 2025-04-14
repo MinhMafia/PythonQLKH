@@ -44,11 +44,10 @@ def open_register_window():
     register_window.title("Đăng ký")
     root.configure(background="#4B0082")
     component.CanGiuaCuaSo(register_window, 450, 300)
-
-
-
     main_frame = tk.Frame(register_window, bg="white")
     main_frame.pack(fill="both", expand=True)
+
+
 
     left_frame = tk.Frame(main_frame, bg="#FFD700", width=300, height=500)
     right_frame = tk.Frame(main_frame, bg="white", width=500, height=500)
@@ -100,7 +99,11 @@ def open_register_window():
         else:
             messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ thông tin!")
     
+    # Khóa tương tác cửa sổ khác
+    register_window.grab_set()
+
     def back_to_login():
+        register_window.grab_release()
         register_window.destroy()
         root.deiconify()
 
