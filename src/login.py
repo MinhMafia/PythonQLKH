@@ -4,12 +4,15 @@ from tkinter import PhotoImage
 from PIL import Image, ImageTk
 import hashlib
 import os
+from pathlib import Path
 
 from BUS.TaiKhoanBUS import TaiKhoanBUS
 
 import home
 import component
 
+# Đường dẫn thư mục hiện tại
+currentDir = Path(__file__).parent
 
 listTaiKhoan = []
 
@@ -137,9 +140,10 @@ right_frame.grid_rowconfigure(0, weight=1)
 title_label = tk.Label(left_frame, text="WELLCOME TO APP", font=("Arial", 18, "bold"), fg="white", bg="#FFD700")
 title_label.pack(pady=20, expand=True)
 
-
-user_icon = ImageTk.PhotoImage(Image.open("./src/img/user.png").resize((25, 20)))
-lock_icon = ImageTk.PhotoImage(Image.open("./src/img/lock.jpg").resize((25, 20)))
+userImage_path = currentDir / "img" / "user.png"
+user_icon = ImageTk.PhotoImage(Image.open(userImage_path).resize((25, 20)))
+lockImage_path = currentDir / "img" / "lock.jpg"
+lock_icon = ImageTk.PhotoImage(Image.open(lockImage_path).resize((25, 20)))
 
 
 
