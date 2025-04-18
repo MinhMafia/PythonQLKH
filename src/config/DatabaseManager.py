@@ -7,11 +7,13 @@ class DatabaseManager:
         connection = None
         try:
             connection = mysql.connector.connect(
-                host="localhost",
+                # host="localhost",
+                host="127.0.0.1",
                 database="quanlykhachhang",
                 user="root",
-                password="",
-                port=3307
+                password="1234",
+                # port=3307
+                port=3306
             )
             if connection.is_connected():
                 print("Kết nối thành công đến cơ sở dữ liệu!")

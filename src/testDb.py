@@ -23,11 +23,17 @@ import mysql.connector
 def fetch_customers():
     try:
         conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
+            # host="localhost",
+            # user="root",
+            # password="",
+            # database="quanlykhachhang",
+            # port=3307
+            
+            host="127.0.0.1",
             database="quanlykhachhang",
-            port=3307
+            user="root",
+            password="1234",
+            port=3306
         )
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM khachhang LIMIT 5")  # Lấy 5 dòng đầu tiên
