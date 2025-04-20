@@ -5,8 +5,7 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 
 import component as comp
-import customer
-import customerTest
+import KhachHang, NhanVien, TaiKhoan
 
 ctk.set_appearance_mode("dark")  # Chế độ tối
 ctk.set_default_color_theme("blue")  # Chủ đề màu xanh
@@ -26,7 +25,6 @@ def homeRun(root):
     frame_left = ctk.CTkFrame(root, width=250, height=650, corner_radius=0)
     frame_left.pack(side="left", fill="y")
 
-    global frame_right
     frame_right = ctk.CTkFrame(root, width=750, height=650)
     frame_right.pack(side="right", fill="both", expand=True)
 
@@ -49,18 +47,32 @@ def homeRun(root):
         for widget in frame_right.winfo_children():
             widget.destroy()  # Xóa nội dung cũ
 
-        match page:
-            case "Home":
-                Home()
-            case "Customer":
-                customer.Customer(frame_right)
-            case "Verify":
-                Verify()
-            case "khTest":
-                customerTest.CustomerTest(frame_right)
-            case _:
-                label = ctk.CTkLabel(frame_right, text="❌ 404 Not Found", font=("Arial", 50))
-                label.pack(expand=True)
+        try:
+            match page:
+                case "Home":
+                    Home()
+                case "Verify":
+                    Verify()
+                case "Customer":
+                    KhachHang.Customer(frame_right)
+                case "Staff":
+                    NhanVien.Staff(frame_right)
+                case "Account":
+                    TaiKhoan.Account(frame_right)
+                case _:
+                    raise ValueError("Trang không tồn tại")
+        except Exception as e:
+            label = ctk.CTkLabel(frame_right, text=f"❌ Lỗi: {e}", font=("Arial", 20), text_color="red")
+            label.pack(expand=True)
+
+    # Hàm đăng xuất
+    def logout():
+        for widget in root.winfo_children():
+            widget.destroy()
+        
+        import login
+        login.root = root  # Truyền root vào module login
+        login.main()  # Hiện lại cửa sổ đăng nhập
 
     # Chia frame_left thanh 2
     frame_left_account = ctk.CTkFrame(frame_left, width=250, height=100)
@@ -70,9 +82,11 @@ def homeRun(root):
     frame_left_menu.pack(fill="both", expand=True)
 
     # Mo ta user
-    global avatar
     avatar_path = currentDir / "img" / "avatar.jpg"
-    avatar_img = ctk.CTkImage(light_image=Image.open(avatar_path).resize((50, 50)))
+    if avatar_path.exists():
+        avatar_img = ctk.CTkImage(light_image=Image.open(avatar_path).resize((50, 50)))
+    else:
+        avatar_img = None  # Hoặc sử dụng ảnh mặc định
 
     # label chứa ảnh
     avatar_label = ctk.CTkLabel(frame_left_account, image=avatar_img, text="")
@@ -91,14 +105,23 @@ def homeRun(root):
     btnHome = ctk.CTkButton(frame_left_menu, text="🏠 Trang chủ", command=lambda: show_frame("Home"))
     btnHome.pack(pady=10, padx=20)
 
-    btnCustomer = ctk.CTkButton(frame_left_menu, text="👤 Khách hàng", command=lambda: show_frame("Customer"))
-    btnCustomer.pack(pady=10, padx=20)
-
     btnVerify = ctk.CTkButton(frame_left_menu, text="Xác Minh", command=lambda: show_frame("Verify"))
     btnVerify.pack(pady=10, padx=20)
 
-    btnCusTest = ctk.CTkButton(frame_left_menu, text="KH test", command=lambda: show_frame("khTest"))
-    btnCusTest.pack(pady=10, padx=20)
+    btnCustomer = ctk.CTkButton(frame_left_menu, text="👤 Khách hàng", command=lambda: show_frame("Customer"))
+    btnCustomer.pack(pady=10, padx=20)
+
+    btnStaff = ctk.CTkButton(frame_left_menu, text="Nhân viên", command=lambda: show_frame("Staff"))
+    btnStaff.pack(pady=10, padx=20)
+
+    btnAccount = ctk.CTkButton(frame_left_menu, text="Tài khoản", command=lambda: show_frame("Account"))
+    btnAccount.pack(pady=10, padx=20)
+
+
+
+    """"Đăng xuất"""
+    btnLogout = ctk.CTkButton(frame_left_menu, text="Đăng xuất", command=logout)
+    btnLogout.pack(side="bottom", pady=10, padx=20)
 
     show_frame("Home")
 

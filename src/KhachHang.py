@@ -2,7 +2,9 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 from BUS.KhachHangBUS import KhachHangBUS
 import component as comp
+import re
 
+CustomerDAO = KhachHangBUS()
 
 def load_khach_hang():
     khachHangBUS = KhachHangBUS()
@@ -74,6 +76,76 @@ def Customer(frame_right):
         ctk.CTkButton(btn_frame, text="Hủy bỏ", fg_color="gray", command=close_window).pack(side="left", padx=10)
         ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=close_window).pack(side="right", padx=10)
 
+    """Giao diện thêm khách hàng"""
+    
+    def open_addCustomer_window(title):
+        win = ctk.CTkToplevel(frame_right)
+        win.title(title)
+        comp.CanGiuaCuaSo(win, 400, 500)
+        win.grab_set()
+
+        ctk.CTkLabel(win, text=title, font=("Arial", 24), text_color="#00FA9A").pack(pady=10)
+
+        form_frame = ctk.CTkFrame(win, fg_color="transparent")
+        form_frame.pack(pady=10)
+
+        fields = {}
+        labels = ["Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+
+        for label_text in labels:
+            label = ctk.CTkLabel(form_frame, text=f"{label_text}:", font=("Arial", 14))
+            label.pack(pady=5)
+            entry = ctk.CTkEntry(form_frame, width=300)
+            entry.pack(pady=5)
+            fields[label_text] = entry
+
+        def close_window():
+            win.grab_release()
+            win.destroy()
+
+        def add_customer():
+            name = fields["Họ và Tên"].get()
+            phone = fields["SĐT"].get()
+            email = fields["Email"].get()
+            address = fields["Địa chỉ"].get()
+
+            if not re.match(r"^[0-9]{10}$", phone):
+                comp.show_notify(False, "Số điện thoại không hợp lệ.")
+                return
+
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                comp.show_notify(False, "Email không hợp lệ.")
+                return
+
+            if not name or not phone or not email or not address:
+                comp.show_notify(False, "Vui lòng điền đầy đủ thông tin.")
+                return
+
+            new_customer = {
+                "HOTEN": name,
+                "SDT": phone,
+                "EMAIL": email,
+                "DIACHI": address,
+            }
+
+            try:
+                CustomerDAO.add_khach_hang(new_customer)
+                comp.show_notify(True, "Thêm khách hàng thành công!")
+                nonlocal customers
+                customers = load_khach_hang()
+                update_table()
+                close_window()
+            except Exception as e:
+                comp.show_notify(False, f"Không thể thêm khách hàng: {e}")
+
+        # Đây là chỗ tạo nút, cần để dưới cùng
+        btn_frame = ctk.CTkFrame(win, fg_color="transparent")
+        btn_frame.pack(pady=15)
+
+        ctk.CTkButton(btn_frame, text="Hủy bỏ", fg_color="gray", command=close_window).pack(side="left", padx=10)
+        ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=add_customer).pack(side="right", padx=10)
+
+
     def open_selected_customer(mode="detail"):
         selected = table.selection()
         if not selected:
@@ -113,7 +185,7 @@ def Customer(frame_right):
     frame_buttons = ctk.CTkFrame(frame_head, fg_color="transparent")
     frame_buttons.pack(side="right", padx=10, pady=10)
 
-    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=lambda: open_customer_window("Thêm khách hàng")).pack(side="left", padx=10)
+    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=lambda: open_addCustomer_window("Thêm khách hàng")).pack(side="left", padx=10)
     ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit")).pack(side="left", padx=10)
     ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80).pack(side="left", padx=10)
     btnDetail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"))

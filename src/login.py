@@ -8,7 +8,6 @@ from pathlib import Path
 
 from BUS.TaiKhoanBUS import TaiKhoanBUS
 
-import home
 import component
 
 # Đường dẫn thư mục hiện tại
@@ -33,6 +32,7 @@ def login():
     for user in users:
         if user.TDN == TDN and user.MK == MK:
             # messagebox.showinfo("Thành công", "Đăng nhập thành công!")
+            import home
             check = False
             home.homeRun(root)
     if check:
@@ -118,64 +118,69 @@ def open_register_window():
     btn_back = tk.Button(button_frame, text="Quay lại",font=("Arial", 12, "bold"), bg="#008000", fg="white", command=back_to_login)
     btn_back.grid(row=0, column=1, padx=5)
 
-root = tk.Tk()
-root.title("Đăng nhập")
-root.configure(background="white")
-component.CanGiuaCuaSo(root, 500, 250)
+def main():
+    global root
+    global root, entry_username, entry_password 
+    
+    root = tk.Tk()
+    root.title("Đăng nhập")
+    root.configure(background="white")
+    component.CanGiuaCuaSo(root, 500, 250)
 
-main_frame = tk.Frame(root, bg="white")
-main_frame.pack(fill="both", expand=True)
+    main_frame = tk.Frame(root, bg="white")
+    main_frame.pack(fill="both", expand=True)
 
-left_frame = tk.Frame(main_frame, bg="#FFD700", width=300, height=500)
-right_frame = tk.Frame(main_frame, bg="white", width=500, height=500)
+    left_frame = tk.Frame(main_frame, bg="#FFD700", width=300, height=500)
+    right_frame = tk.Frame(main_frame, bg="white", width=500, height=500)
 
-left_frame.grid(row=0, column=0, sticky="nsew")
-right_frame.grid(row=0, column=1, sticky="nsew")
+    left_frame.grid(row=0, column=0, sticky="nsew")
+    right_frame.grid(row=0, column=1, sticky="nsew")
 
-right_frame.grid_columnconfigure(0, weight=1)
-right_frame.grid_columnconfigure(1, weight=2)
-right_frame.grid_rowconfigure(0, weight=1)
+    right_frame.grid_columnconfigure(0, weight=1)
+    right_frame.grid_columnconfigure(1, weight=2)
+    right_frame.grid_rowconfigure(0, weight=1)
 
-# Logo hoặc tiêu đề
-title_label = tk.Label(left_frame, text="WELLCOME TO APP", font=("Arial", 18, "bold"), fg="white", bg="#FFD700")
-title_label.pack(pady=20, expand=True)
+    # Logo hoặc tiêu đề
+    title_label = tk.Label(left_frame, text="WELLCOME TO APP", font=("Arial", 18, "bold"), fg="white", bg="#FFD700")
+    title_label.pack(pady=20, expand=True)
 
-userImage_path = currentDir / "img" / "user.png"
-user_icon = ImageTk.PhotoImage(Image.open(userImage_path).resize((25, 20)))
-lockImage_path = currentDir / "img" / "lock.jpg"
-lock_icon = ImageTk.PhotoImage(Image.open(lockImage_path).resize((25, 20)))
-
-
-
-frame_user = tk.Frame(right_frame, bg="white", bd=2, relief="groove")
-frame_user.pack(pady=10, padx=20, fill="x")
-user_label = tk.Label(frame_user, image=user_icon, bg="white")
-user_label.pack(side="left", padx=5)
-entry_username = tk.Entry(frame_user, font=("Arial", 12), bd=0)
-entry_username.pack(side="left", fill="x", expand=True)
-entry_username.insert(0, "admin")
+    userImage_path = currentDir / "img" / "user.png"
+    user_icon = ImageTk.PhotoImage(Image.open(userImage_path).resize((25, 20)))
+    lockImage_path = currentDir / "img" / "lock.jpg"
+    lock_icon = ImageTk.PhotoImage(Image.open(lockImage_path).resize((25, 20)))
 
 
-frame_pass = tk.Frame(right_frame, bg="white", bd=2, relief="groove")
-frame_pass.pack(pady=10, padx=20, fill="x")
-pass_label = tk.Label(frame_pass, image=lock_icon, bg="white")
-pass_label.pack(side="left", padx=5)
-entry_password = tk.Entry(frame_pass, font=("Arial", 12), show="*", bd=0)
-entry_password.pack(side="left", fill="x", expand=True)
-entry_password.insert(0, "123456")
+
+    frame_user = tk.Frame(right_frame, bg="white", bd=2, relief="groove")
+    frame_user.pack(pady=10, padx=20, fill="x")
+    user_label = tk.Label(frame_user, image=user_icon, bg="white")
+    user_label.pack(side="left", padx=5)
+    entry_username = tk.Entry(frame_user, font=("Arial", 12), bd=0)
+    entry_username.pack(side="left", fill="x", expand=True)
+    entry_username.insert(0, "admin")
 
 
-forgot_label = tk.Label(right_frame, text="Quên mật khẩu?", fg="black", bg="white", cursor="hand2")
-forgot_label.pack(pady=5)
+    frame_pass = tk.Frame(right_frame, bg="white", bd=2, relief="groove")
+    frame_pass.pack(pady=10, padx=20, fill="x")
+    pass_label = tk.Label(frame_pass, image=lock_icon, bg="white")
+    pass_label.pack(side="left", padx=5)
+    entry_password = tk.Entry(frame_pass, font=("Arial", 12), show="*", bd=0)
+    entry_password.pack(side="left", fill="x", expand=True)
+    entry_password.insert(0, "123456")
 
 
-btn_login = tk.Button(right_frame, text="Đăng nhập", font=("Arial", 14, "bold"), bg="#FFA500", fg="white", command=login)
-btn_login.pack(pady=10, padx=50, fill="x")
+    forgot_label = tk.Label(right_frame, text="Quên mật khẩu?", fg="black", bg="white", cursor="hand2")
+    forgot_label.pack(pady=5)
 
 
-register_label = tk.Label(right_frame, text="Chưa có tài khoản? Đăng ký ngay", fg="cyan", bg="white", cursor="hand2")
-register_label.pack(pady=5)
-register_label.bind("<Button-1>", lambda e: open_register_window())
+    btn_login = tk.Button(right_frame, text="Đăng nhập", font=("Arial", 14, "bold"), bg="#FFA500", fg="white", command=login)
+    btn_login.pack(pady=10, padx=50, fill="x")
 
-root.mainloop()
 
+    register_label = tk.Label(right_frame, text="Chưa có tài khoản? Đăng ký ngay", fg="cyan", bg="white", cursor="hand2")
+    register_label.pack(pady=5)
+    register_label.bind("<Button-1>", lambda e: open_register_window())
+
+if __name__ == "__main__":
+    main()
+    root.mainloop()
