@@ -6,6 +6,7 @@ import tkinter.ttk as ttk
 
 import component as comp
 import KhachHang, NhanVien, TaiKhoan
+from verification import load_verification_interface
 
 ctk.set_appearance_mode("dark")  # Chế độ tối
 ctk.set_default_color_theme("blue")  # Chủ đề màu xanh
@@ -52,7 +53,8 @@ def homeRun(root):
                 case "Home":
                     Home()
                 case "Verify":
-                    Verify()
+                    # Verify()
+                    load_verification_interface(frame_right)
                 case "Customer":
                     KhachHang.Customer(frame_right)
                 case "Staff":
