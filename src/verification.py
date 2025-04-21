@@ -17,9 +17,12 @@ from PIL import Image, ImageTk
 from DTO.KhanhHangDTO import KhachHangDTO
 from config.DatabaseManager import DatabaseManager
 from BUS.KhachHangBUS import KhachHangBUS
+from pathlib import Path 
 
 # Đường dẫn gốc của dự án
-base_dir = r"D:\Code\Py"
+currentDir = Path(__file__).parent
+base_dir = currentDir.parent / "database" 
+ 
 
 # Đường dẫn đến các thư mục
 reference_dir = os.path.join(base_dir, "Signatures", "Reference")
