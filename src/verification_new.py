@@ -42,8 +42,9 @@ cursor = conn.cursor(dictionary=True)
 # Hàm huấn luyện mô hình VGG16 với tăng cường dữ liệu
 def train_vgg16_model():
     # Lấy danh sách khách hàng đã kích hoạt
-    cursor.execute("SELECT MKH FROM KHACHHANG WHERE TT = 1")
-    active_customers = [str(customer['MKH']) for customer in cursor.fetchall()]
+    # cursor.execute("SELECT MKH FROM KHACHHANG WHERE TT = 1")
+    # active_customers = [str(customer.MKH) for customer in cursor.fetchall()]
+    active_customers = [str(kh.MKH) for kh in KhachHangBUS().get_khach_hang_all() if kh.TT == 1]
     
     if not active_customers:
         print("Không có khách hàng nào để huấn luyện mô hình.")
@@ -125,8 +126,9 @@ def train_vgg16_model():
 
 # Tải mô hình và danh sách nhãn
 def load_model_and_labels():
-    cursor.execute("SELECT MKH FROM KHACHHANG WHERE TT = 1")
-    active_customers = [str(customer['MKH']) for customer in cursor.fetchall()]
+    # cursor.execute("SELECT MKH FROM KHACHHANG WHERE TT = 1")
+    # active_customers = [str(customer.MKH) for customer in cursor.fetchall()]
+    active_customers = [str(kh.MKH) for kh in KhachHangBUS().get_khach_hang_all() if kh.TT == 1]
     label_to_index = {str(mkh): idx for idx, mkh in enumerate(active_customers)}
     index_to_label = {idx: mkh for mkh, idx in label_to_index.items()}
     
@@ -144,12 +146,15 @@ model, label_to_index, index_to_label = load_model_and_labels()
 
 # Giao diện đồ họa
 class SignatureVerificationApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Hệ thống xác thực chữ ký khách hàng")
+    # def __init__(self, root):
+    #     self.root = root
+    def __init__(self, parent_frame):
+        self.root = parent_frame
+        # self.root.title("Hệ thống xác thực chữ ký khách hàng")
+        self.khach_hang_bus = KhachHangBUS()  # Khởi tạo BUS để giao tiếp với DAO
 
         # Tab control
-        self.tab_control = ttk.Notebook(root)
+        self.tab_control = ttk.Notebook(self.root)
         
         # Tab 1: Thêm chữ ký mẫu
         self.tab_add_customer = ttk.Frame(self.tab_control)
@@ -231,21 +236,23 @@ class SignatureVerificationApp:
             self.tree.delete(item)
         
         # Lấy danh sách khách hàng chưa kích hoạt
-        cursor.execute("SELECT MKH, HOTEN FROM KHACHHANG WHERE TT = 0")
-        inactive_customers = cursor.fetchall()
+        # cursor.execute("SELECT MKH, HOTEN FROM KHACHHANG WHERE TT = 0")
+        # inactive_customers = cursor.fetchall()
+        inactive_customers = [kh for kh in self.khach_hang_bus.get_khach_hang_all() if kh.TT == 0]
         
         # Thêm vào treeview
         for customer in inactive_customers:
-            self.tree.insert("", "end", values=(customer['MKH'], customer['HOTEN']))
+            self.tree.insert("", "end", values=(customer.MKH, customer.HOTEN))
         
         # Cập nhật combobox
-        self.customer_dropdown['values'] = [str(customer['MKH']) for customer in inactive_customers]
+        self.customer_dropdown['values'] = [str(customer.MKH) for customer in inactive_customers]
 
     def refresh_verify_customer_list(self):
         # Lấy danh sách tất cả khách hàng để xác thực
-        cursor.execute("SELECT MKH FROM KHACHHANG")
-        all_customers = cursor.fetchall()
-        self.verify_customer_dropdown['values'] = [str(customer['MKH']) for customer in all_customers]
+        # cursor.execute("SELECT MKH FROM KHACHHANG")
+        # all_customers = cursor.fetchall()
+        all_customers = self.khach_hang_bus.get_khach_hang_all()
+        self.verify_customer_dropdown['values'] = [str(customer.MKH) for customer in all_customers]
 
     def on_customer_select(self, event):
         self.selected_customer_id = self.customer_var.get()
@@ -296,8 +303,12 @@ class SignatureVerificationApp:
         shutil.move(customer_dir, reference_customer_path)
         
         # Kích hoạt khách hàng trong database
-        cursor.execute("UPDATE KHACHHANG SET TT = 1 WHERE MKH = %s", (self.selected_customer_id,))
-        conn.commit()
+        # cursor.execute("UPDATE KHACHHANG SET TT = 1 WHERE MKH = %s", (self.selected_customer_id,))
+        # conn.commit()
+        kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(self.selected_customer_id)
+        if kh:
+            kh.TT = 1
+            self.khach_hang_bus.update_khach_hang(kh)
         
         # Huấn luyện lại mô hình với dữ liệu mới
         result = train_vgg16_model()
@@ -384,18 +395,31 @@ class SignatureVerificationApp:
         
         # Xác thực
         threshold = 0.9
+        # Sau dòng threshold = 0.9
         if predicted_mkh == customer_id and confidence >= threshold:
             messagebox.showinfo("Kết quả", f"Success: Chữ ký khớp với khách hàng MKH: {customer_id}\nConfidence: {confidence:.4f}")
-            cursor.execute("UPDATE KHACHHANG SET TT = 1 WHERE MKH = %s", (customer_id,))
-            conn.commit()
+            
+            # Cập nhật trạng thái khách hàng thông qua BUS
+            kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(customer_id)
+            if kh:
+                kh.TT = 1
+                self.khach_hang_bus.update_khach_hang(kh)
+                print(f"Đã cập nhật trạng thái khách hàng {customer_id} thành kích hoạt.")
+            else:
+                print(f"Không tìm thấy khách hàng với ID: {customer_id}")
         else:
             messagebox.showwarning("Kết quả", f"Chữ ký không khớp với khách hàng MKH: {customer_id}\nTrùng khớp với MKH: {predicted_mkh}\nConfidence: {confidence:.4f}")
 
 # Chạy ứng dụng
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = SignatureVerificationApp(root)
-    root.mainloop()
+# if __name__ == "__main__":
+#     root = tk.Tk()
+#     app = SignatureVerificationApp(root)
+#     root.mainloop()
 
+def load_verification_interface(parent_frame):
+    # Xóa nội dung cũ trong frame
+    for widget in parent_frame.winfo_children():
+        widget.destroy()
+    app = SignatureVerificationApp(parent_frame)
 # Đóng kết nối database
 db_manager.close_connection(conn)
