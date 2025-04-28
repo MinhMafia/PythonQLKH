@@ -6,14 +6,13 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.applications.vgg16 import preprocess_input
-
 from tensorflow.keras.layers import Flatten
-
 import matplotlib.pyplot as plt
 import faiss
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
+
 from DTO.KhanhHangDTO import KhachHangDTO
 from config.DatabaseManager import DatabaseManager
 from BUS.KhachHangBUS import KhachHangBUS
