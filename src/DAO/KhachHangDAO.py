@@ -1,5 +1,5 @@
 from mysql.connector import Error
-from DTO.KhachHangDTO import KhachHangDTO
+from DTO.KhanhHangDTO import KhachHangDTO
 from config.DatabaseManager import DatabaseManager
 
 class KhachHangDAO:

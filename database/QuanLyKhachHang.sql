@@ -66,7 +66,7 @@ CREATE TABLE `KHACHHANG` (
     `DIACHI` VARCHAR(255) COMMENT 'Địa chỉ',
     `SDT` VARCHAR(11) UNIQUE NOT NULL COMMENT 'Số điện thoại',
     `EMAIL` VARCHAR(50) UNIQUE COMMENT 'Email',
-    `CCCD` INT(11) UNIQUE COMMENT 'Số CCCD',
+    `CCCD` VARCHAR(11) COMMENT 'Số CCCD',
     `TIEN` INT(11) COMMENT 'Số tiền của khánh hàng',
     `TT` INT(11) NOT NULL DEFAULT 1 COMMENT 'Trạng thái',
     PRIMARY KEY(MKH)
@@ -79,6 +79,7 @@ CREATE TABLE `GIAODICH` (
     `MNV` INT(11) NOT NULL COMMENT 'Mã nhân viên',
     `NGAYGIAODICH`DATETIME DEFAULT current_timestamp() COMMENT 'Ngày tạo giao dịch',
     `TIEN` INT(11) COMMENT 'Số tiền giao dịch',
+    `TIENKH` INT(11) COMMENT 'Số tiền khách hàng tại thời điểm đó',
     `TT` INT(11) NOT NULL DEFAULT 1 COMMENT 'Trạng thái',
     PRIMARY KEY(MGD)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
@@ -90,7 +91,7 @@ VALUES
         ('nhanvien', 'Quản lý nhân viên', 1),
         ('chucvu', 'Quản lý chức vụ', 1),
         ('nhomquyen', 'Quản lý nhóm quyền', 1),
-        ('taikhoan', 'Quản lý tài khoản', 1)
+        ('taikhoan', 'Quản lý tài khoản', 1),
         ('giaodich', 'Quản lý giao dịch', 1);
 
 INSERT INTO `CTQUYEN` (`MNQ`, `MCN`, `HANHDONG`)
@@ -152,36 +153,36 @@ VALUES
         (1, 'admin', '123456', 1, 1, 'null'),
         (2, 'NV2', '123456', 2, 1, 'null');
 
-INSERT INTO `KHACHHANG` (`HOTEN`, `DIACHI`, `SDT`, `TT`, `NGAYTHAMGIA`)
+INSERT INTO `KHACHHANG` (`HOTEN`, `DIACHI`, `SDT`, `CCCD`, `TIEN`, `TT`, `NGAYTHAMGIA`)
 VALUES
-        ('Nguyễn Văn A', 'Gia Đức, Ân Đức, Hoài Ân, Bình Định', '0387913347', 1, '2024-04-15 09:52:29'),
-        ('Trần Nhất Nhất', '205 Trần Hưng Đạo, Phường 10, Quận 5, Thành phố Hồ Chí Minh', '0123456789', 0, '2024-04-15 09:52:29'),
-        ('Hoàng Gia Bo', 'Khoa Trường, Hoài Ân, Bình Định', '0987654321', 0, '2024-04-15 09:52:29'),
-        ('Hồ Minh Hưng', 'Khoa Trường, Hoài Ân, Bình Định', '0867987456', 0, '2024-04-15 09:52:29'),
-        ('Nguyễn Thị Minh Anh', '123 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0935123456', 1, '2024-04-16 17:59:57'),
-        ('Trần Đức Minh', '789 Đường Lê Hồng Phong, Thành phố Đà Nẵng', '0983456789', 0, '2024-04-16 18:08:12'),
-        ('Lê Hải Yến', '456 Tôn Thất Thuyết, Quận 4, Thành phố Hồ Chí Minh', '0977234567', 0, '2024-04-16 18:08:47'),
-        ('Phạm Thanh Hằng', '102 Lê Duẩn, Thành phố Hải Phòng', '0965876543', 0, '2024-04-16 18:12:59'),
-        ('Hoàng Đức Anh', '321 Lý Thường Kiệt, Thành phố Cần Thơ', '0946789012', 0, '2024-04-16 18:13:47'),
-        ('Ngô Thanh Tùng', '987 Trần Hưng Đạo, Quận 1, Thành phố Hồ Chí Minh', '0912345678', 1, '2024-04-16 18:14:12'),
-        ('Võ Thị Kim Ngân', '555 Nguyễn Văn Linh, Quận Nam Từ Liêm, Hà Nội', '0916789123', 0, '2024-04-16 18:15:11'),
-        ('Đỗ Văn Tú', '777 Hùng Vương, Thành phố Huế', '0982345678', 1, '2024-04-30 18:15:56'),
-        ('Lý Thanh Trúc', '888 Nguyễn Thái Học, Quận Ba Đình, Hà Nội', '0982123456', 0, '2024-04-16 18:16:22'),
-        ('Bùi Văn Hoàng', '222 Đường 2/4, Thành phố Nha Trang', '0933789012', 0, '2024-04-16 18:16:53'),
-        ('Lê Văn Thành', '23 Đường 3 Tháng 2, Quận 10, TP. Hồ Chí Minh', '0933456789', 0, '2024-04-16 18:17:46'),
-        ('Nguyễn Thị Lan Anh', '456 Lê Lợi, Quận 1, TP. Hà Nội', '0965123456', 0, '2024-04-16 18:18:10'),
-        ('Phạm Thị Mai', '234 Lê Hồng Phong, Quận 5, TP. Hồ Chí Minh', '0946789013', 0, '2024-04-17 18:18:34'),
-        ('Hoàng Văn Nam', ' 567 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0912345679', 0, '2024-04-17 18:19:16');
+        ('Nguyễn Văn A', 'Gia Đức, Ân Đức, Hoài Ân, Bình Định', '0387913347', '082300100001', 50000000, 1, '2024-04-15 09:52:29'),
+        ('Trần Nhất Nhất', '205 Trần Hưng Đạo, Phường 10, Quận 5, Thành phố Hồ Chí Minh', '0123456789', '082300020002', 40000000, 0, '2024-04-15 09:52:29'),
+        ('Hoàng Gia Bo', 'Khoa Trường, Hoài Ân, Bình Định', '0987654321', '082303000003', 20000000, 0, '2024-04-15 09:52:29'),
+        ('Hồ Minh Hưng', 'Khoa Trường, Hoài Ân, Bình Định', '0867987456', '082300004004', 80000000, 0, '2024-04-15 09:52:29'),
+        ('Nguyễn Thị Minh Anh', '123 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0935123456', '082300050005', 8000000, 1, '2024-04-16 17:59:57'),
+        ('Trần Đức Minh', '789 Đường Lê Hồng Phong, Thành phố Đà Nẵng', '0983456789', '082300060006', 4000000, 0, '2024-04-16 18:08:12'),
+        ('Lê Hải Yến', '456 Tôn Thất Thuyết, Quận 4, Thành phố Hồ Chí Minh', '0977234567', '082370000007', 3000000, 0, '2024-04-16 18:08:47'),
+        ('Phạm Thanh Hằng', '102 Lê Duẩn, Thành phố Hải Phòng', '0965876543', '082300000908', 2000000, 0, '2024-04-16 18:12:59'),
+        ('Hoàng Đức Anh', '321 Lý Thường Kiệt, Thành phố Cần Thơ', '0946789012', '082300800009', 1000000, 0, '2024-04-16 18:13:47'),
+        ('Ngô Thanh Tùng', '987 Trần Hưng Đạo, Quận 1, Thành phố Hồ Chí Minh', '0912345678', '082300000010', 10000000, 1, '2024-04-16 18:14:12'),
+        ('Võ Thị Kim Ngân', '555 Nguyễn Văn Linh, Quận Nam Từ Liêm, Hà Nội', '0916789123', '082302000011', 90000000, 0, '2024-04-16 18:15:11'),
+        ('Đỗ Văn Tú', '777 Hùng Vương, Thành phố Huế', '0982345678', '082300030012', 7000000, 0, '2024-04-30 18:15:56'),
+        ('Lý Thanh Trúc', '888 Nguyễn Thái Học, Quận Ba Đình, Hà Nội', '0982123456', '082304000013', 4000000, 0, '2024-04-16 18:16:22'),
+        ('Bùi Văn Hoàng', '222 Đường 2/4, Thành phố Nha Trang', '0933789012', '082300050014', 5000000, 0, '2024-04-16 18:16:53'),
+        ('Lê Văn Thành', '23 Đường 3 Tháng 2, Quận 10, TP. Hồ Chí Minh', '0933456789', '082300600015', 100000000, 0, '2024-04-16 18:17:46'),
+        ('Nguyễn Thị Lan Anh', '456 Lê Lợi, Quận 1, TP. Hà Nội', '0965123456', '082300007016', 40000000,0, '2024-04-16 18:18:10'),
+        ('Phạm Thị Mai', '234 Lê Hồng Phong, Quận 5, TP. Hồ Chí Minh', '0946789013', '082300060017', 60000000, 0, '2024-04-17 18:18:34'),
+        ('Hoàng Văn Nam', ' 567 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0912345679', '082300008018', 70000000, 0, '2024-04-17 18:19:16');
 
-
-INSERT INTO `GIAODICH` (`MKH`, `MNV`, `TIEN`, `TT`)
+INSERT INTO `GIAODICH` (`MKH`, `MNV`, `TIEN`, `TT`, `TIENKH`)
 VALUES
-    (1, 3, 500000, 1),  -- Giao dịch của khách hàng có mã 1, nhân viên mã 3, số tiền 500000, trạng thái 1 (thành công)
-    (2, 3, 150000, 1),  -- Giao dịch của khách hàng có mã 2, nhân viên mã 3, số tiền 150000, trạng thái 1 (thành công)
-    (3, 3, 100000, 2),  -- Giao dịch của khách hàng có mã 3, nhân viên mã 3, số tiền 100000, trạng thái 2 (đang xử lý)
-    (4, 3, 200000, 1),  -- Giao dịch của khách hàng có mã 4, nhân viên mã 3, số tiền 200000, trạng thái 1 (thành công)
-    (5, 3, 750000, 0),  -- Giao dịch của khách hàng có mã 5, nhân viên mã 3, số tiền 750000, trạng thái 0 (hủy)
-    (6, 3, 120000, 1);  -- Giao dịch của khách hàng có mã 6, nhân viên mã 3, số tiền 120000, trạng thái 1 (thành công)
+    (1, 3, 200000, 1, (SELECT TIEN FROM KHACHHANG WHERE MKH = 1) + 200000),  -- Nạp 200,000 vào tài khoản khách hàng 1, trạng thái thành công
+    (2, 3, 300000, 1, (SELECT TIEN FROM KHACHHANG WHERE MKH = 2) + 300000),  -- Nạp 300,000 vào tài khoản khách hàng 2, trạng thái thành công
+    (3, 3, 500000, 1, (SELECT TIEN FROM KHACHHANG WHERE MKH = 3) + 500000),  -- Nạp 500,000 vào tài khoản khách hàng 3, trạng thái thành công
+    (4, 3, -100000, 1, (SELECT TIEN FROM KHACHHANG WHERE MKH = 4) - 100000),  -- Rút 100,000 từ tài khoản khách hàng 4, trạng thái thành công
+    (5, 3, -500000, 0, (SELECT TIEN FROM KHACHHANG WHERE MKH = 5) - 500000),  -- Rút 500,000 từ tài khoản khách hàng 5, trạng thái hủy
+    (6, 3, -700000, 2, (SELECT TIEN FROM KHACHHANG WHERE MKH = 6) - 700000);  -- Rút 700,000 từ tài khoản khách hàng 6, trạng thái đang xử lý
+
         
 /*Tạo quan hệ*/
 

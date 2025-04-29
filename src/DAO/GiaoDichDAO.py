@@ -12,10 +12,10 @@ class GiaoDichDAO:
         try:
             con = DatabaseManager.get_connection()
             sql = """INSERT INTO GIAODICH 
-                     (MKH, MNV, NGAYGIAODICH, TIEN, TT) 
-                     VALUES (%s, %s, %s, %s, %s)"""
+                     (MKH, MNV, NGAYGIAODICH, TIEN, TIENKH, TT) 
+                     VALUES (%s, %s, %s, %s, %s, %s)"""
             cursor = con.cursor()
-            cursor.execute(sql, (gd.MKH, gd.MNV, gd.NGAYGIAODICH, gd.TIEN, gd.TT))
+            cursor.execute(sql, (gd.MKH, gd.MNV, gd.NGAYGIAODICH, gd.TIEN, gd.TIENKH, gd.TT))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
@@ -28,10 +28,10 @@ class GiaoDichDAO:
         try:
             con = DatabaseManager.get_connection()
             sql = """UPDATE GIAODICH 
-                     SET MKH = %s, MNV = %s, NGAYGIAODICH = %s, TIEN = %s, TT = %s 
+                     SET MKH = %s, MNV = %s, NGAYGIAODICH = %s, TIEN = %s, TIENKH = %s, TT = %s 
                      WHERE MGD = %s"""
             cursor = con.cursor()
-            cursor.execute(sql, (gd.MKH, gd.MNV, gd.NGAYGIAODICH, gd.TIEN, gd.TT, gd.MGD))
+            cursor.execute(sql, (gd.MKH, gd.MNV, gd.NGAYGIAODICH, gd.TIEN, gd.TIENKH, gd.TT, gd.MGD))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
@@ -54,6 +54,7 @@ class GiaoDichDAO:
                     MNV=row["MNV"],
                     NGAYGIAODICH=row["NGAYGIAODICH"],
                     TIEN=row["TIEN"],
+                    TIENKH=row["TIENKH"],
                     TT=row["TT"]
                 )
                 result.append(gd)
@@ -92,6 +93,7 @@ class GiaoDichDAO:
                     MNV=row["MNV"],
                     NGAYGIAODICH=row["NGAYGIAODICH"],
                     TIEN=row["TIEN"],
+                    TIENKH=row["TIENKH"],
                     TT=row["TT"]
                 )
             DatabaseManager.close_connection(con)
@@ -114,6 +116,7 @@ class GiaoDichDAO:
                     MNV=row["MNV"],
                     NGAYGIAODICH=row["NGAYGIAODICH"],
                     TIEN=row["TIEN"],
+                    TIENKH=row["TIENKH"],
                     TT=row["TT"]
                 )
                 result.append(gd)

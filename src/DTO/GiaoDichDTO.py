@@ -4,14 +4,16 @@ class GiaoDichDTO:
     MNV: int           # Mã nhân viên
     NGAYGIAODICH: str  # Ngày giao dịch (dùng str dạng 'YYYY-MM-DD HH:MM:SS')
     TIEN: int          # Số tiền giao dịch
+    TIENKH: int        # Số tiền khách hàng tại thời điểm giao dịch
     TT: int            # Trạng thái
 
-    def __init__(self, MGD, MKH, MNV, NGAYGIAODICH, TIEN, TT=1):
+    def __init__(self, MGD, MKH, MNV, NGAYGIAODICH, TIEN, TIENKH, TT=1):
         self.MGD = MGD
         self.MKH = MKH
         self.MNV = MNV
         self.NGAYGIAODICH = NGAYGIAODICH
         self.TIEN = TIEN
+        self.TIENKH = TIENKH
         self.TT = TT
 
     # Getter và Setter cho MGD
@@ -49,6 +51,13 @@ class GiaoDichDTO:
     def set_TIEN(self, new_TIEN):
         self.TIEN = new_TIEN
 
+    # Getter và Setter cho TIENKH
+    def get_TIENKH(self):
+        return self.TIENKH
+
+    def set_TIENKH(self, new_TIENKH):
+        self.TIENKH = new_TIENKH
+
     # Getter và Setter cho TT
     def get_TT(self):
         return self.TT
@@ -66,5 +75,6 @@ class GiaoDichDTO:
             self.MNV == other.MNV and
             self.NGAYGIAODICH == other.NGAYGIAODICH and
             self.TIEN == other.TIEN and
+            self.TIENKH == other.TIENKH and
             self.TT == other.TT
         )
