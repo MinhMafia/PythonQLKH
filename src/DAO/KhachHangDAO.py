@@ -1,5 +1,5 @@
 from mysql.connector import Error
-from DTO.KhanhHangDTO import KhachHangDTO
+from DTO.KhachHangDTO import KhachHangDTO
 from config.DatabaseManager import DatabaseManager
 
 class KhachHangDAO:
@@ -11,9 +11,11 @@ class KhachHangDAO:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "INSERT INTO KHACHHANG (MKH, HOTEN, NGAYTHAMGIA, DIACHI, SDT, EMAIL, TT) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            sql = """INSERT INTO KHACHHANG 
+                     (HOTEN, NGAYTHAMGIA, DIACHI, SDT, EMAIL, CCCD, TIEN, TT) 
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
             cursor = con.cursor()
-            cursor.execute(sql, (kh.MKH, kh.HOTEN, kh.NGAYTHAMGIA, kh.DIACHI, kh.SDT, kh.EMAIL, kh.TT))
+            cursor.execute(sql, (kh.HOTEN, kh.NGAYTHAMGIA, kh.DIACHI, kh.SDT, kh.EMAIL, kh.CCCD, kh.TIEN, kh.TT))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
@@ -25,9 +27,11 @@ class KhachHangDAO:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "UPDATE KHACHHANG SET HOTEN = %s, DIACHI = %s, SDT = %s, EMAIL = %s, TT = %s WHERE MKH = %s"
+            sql = """UPDATE KHACHHANG 
+                     SET HOTEN = %s, DIACHI = %s, SDT = %s, EMAIL = %s, CCCD = %s, TIEN = %s, TT = %s 
+                     WHERE MKH = %s"""
             cursor = con.cursor()
-            cursor.execute(sql, (kh.HOTEN, kh.DIACHI, kh.SDT, kh.EMAIL, kh.TT, kh.MKH))
+            cursor.execute(sql, (kh.HOTEN, kh.DIACHI, kh.SDT, kh.EMAIL, kh.CCCD, kh.TIEN, kh.TT, kh.MKH))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
@@ -35,6 +39,7 @@ class KhachHangDAO:
             print(f"Error: {e}")
         return result
 
+    @staticmethod
     def select_all():
         result = []
         try:
@@ -50,6 +55,8 @@ class KhachHangDAO:
                     DIACHI=row["DIACHI"],
                     SDT=row["SDT"],
                     EMAIL=row["EMAIL"],
+                    CCCD=row["CCCD"],
+                    TIEN=row["TIEN"],
                     TT=row["TT"]
                 )
                 result.append(kh)
@@ -57,7 +64,7 @@ class KhachHangDAO:
         except Error as e:
             print(f"Error: {e}")
         return result
-    
+
     def delete(self, mkh):
         result = 0
         try:
@@ -82,12 +89,22 @@ class KhachHangDAO:
             cursor.execute(sql, (mkh,))
             row = cursor.fetchone()
             if row:
-                result = KhachHangDTO(row["MKH"], row["HOTEN"], row["NGAYTHAMGIA"], row["DIACHI"], row["SDT"], row["EMAIL"], row["TT"])
+                result = KhachHangDTO(
+                    MKH=row["MKH"],
+                    HOTEN=row["HOTEN"],
+                    NGAYTHAMGIA=row["NGAYTHAMGIA"],
+                    DIACHI=row["DIACHI"],
+                    SDT=row["SDT"],
+                    EMAIL=row["EMAIL"],
+                    CCCD=row["CCCD"],
+                    TIEN=row["TIEN"],
+                    TT=row["TT"]
+                )
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
         return result
-    
+
     @staticmethod
     def select_by_email(email):
         result = None
@@ -98,12 +115,22 @@ class KhachHangDAO:
             cursor.execute(sql, (email,))
             row = cursor.fetchone()
             if row:
-                result = KhachHangDTO(row["MKH"], row["HOTEN"], row["NGAYTHAMGIA"], row["DIACHI"], row["SDT"], row["EMAIL"], row["TT"])
+                result = KhachHangDTO(
+                    MKH=row["MKH"],
+                    HOTEN=row["HOTEN"],
+                    NGAYTHAMGIA=row["NGAYTHAMGIA"],
+                    DIACHI=row["DIACHI"],
+                    SDT=row["SDT"],
+                    EMAIL=row["EMAIL"],
+                    CCCD=row["CCCD"],
+                    TIEN=row["TIEN"],
+                    TT=row["TT"]
+                )
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
         return result
-    
+
     def is_account_inactive(self, email):
         is_inactive = False
         try:

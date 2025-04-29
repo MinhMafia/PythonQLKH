@@ -66,19 +66,22 @@ CREATE TABLE `KHACHHANG` (
     `DIACHI` VARCHAR(255) COMMENT 'Địa chỉ',
     `SDT` VARCHAR(11) UNIQUE NOT NULL COMMENT 'Số điện thoại',
     `EMAIL` VARCHAR(50) UNIQUE COMMENT 'Email',
+    `CCCD` INT(11) UNIQUE COMMENT 'Số CCCD',
+    `TIEN` INT(11) COMMENT 'Số tiền của khánh hàng',
     `TT` INT(11) NOT NULL DEFAULT 1 COMMENT 'Trạng thái',
     PRIMARY KEY(MKH)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
-CREATE TABLE `CHUKY` (
-    `MACHUKY` INT(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chữ ký',
-    `MKH` INT(11) NOT NULL COMMENT 'Mã khách hàng',
-    `HINHANH` INT(11) NOT NULL COMMENT 'Hình ảnh chữ ký',
-    `NGAYTAO` DATE NOT NULL COMMENT 'Ngày tạo dữ liệu',
-    `TT` INT(11) NOT NULL DEFAULT 1 COMMENT 'Trạng thái',
-    PRIMARY KEY(MACHUKY)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
+CREATE TABLE `GIAODICH` (
+    `MGD` INT(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã giao dịch',
+    `MKH` INT(11) NOT NULL COMMENT 'Mã khách hàng',
+    `MNV` INT(11) NOT NULL COMMENT 'Mã nhân viên',
+    `NGAYGIAODICH`DATETIME DEFAULT current_timestamp() COMMENT 'Ngày tạo giao dịch',
+    `TIEN` INT(11) COMMENT 'Số tiền giao dịch',
+    `TT` INT(11) NOT NULL DEFAULT 1 COMMENT 'Trạng thái',
+    PRIMARY KEY(MGD)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 /*Thêm dữ liệu*/
 
 INSERT INTO `DANHMUCCHUCNANG`(`MCN`, `TEN`, `TT`)
@@ -87,7 +90,8 @@ VALUES
         ('nhanvien', 'Quản lý nhân viên', 1),
         ('chucvu', 'Quản lý chức vụ', 1),
         ('nhomquyen', 'Quản lý nhóm quyền', 1),
-        ('taikhoan', 'Quản lý tài khoản', 1);
+        ('taikhoan', 'Quản lý tài khoản', 1)
+        ('giaodich', 'Quản lý giao dịch', 1);
 
 INSERT INTO `CTQUYEN` (`MNQ`, `MCN`, `HANHDONG`)
 VALUES
@@ -114,24 +118,34 @@ VALUES
         (2, 'khachhang', 'create'),
         (2, 'khachhang', 'delete'),
         (2, 'khachhang', 'update'),
-        (2, 'khachhang', 'view');
+        (2, 'khachhang', 'view'),
+        (2, 'giaodich', 'create'),
+        (2, 'giaodich', 'delete'),
+        (2, 'giaodich', 'update'),
+        (2, 'giaodich', 'view'),
+        (3, 'khachhang', 'create'),
+        (3, 'khachhang', 'delete'),
+        (3, 'khachhang', 'update'),
+        (3, 'khachhang', 'view');
 
 INSERT INTO `NHOMQUYEN` (`TEN`, `TT`)
 VALUES
         ('Quản lý tổng', 1),
-        ('Nhân viên', 1);
+        ('Quản lý giao dịch', 1),
+        ('Nhân viên giao dịch', 1);
 
 INSERT INTO `NHANVIEN` (`HOTEN`, `GIOITINH`, `NGAYSINH`, `SDT`, `EMAIL`, `MCV`, `TT`)
 VALUES
         ('Lê Thế Minh', 0, '2077-01-01', '0505555505', 'remchan.com@gmail.com', 1, 1),
         ('Huỳnh Khôi Nguyên', 1, '2023-05-06', '0123456789', 'nguyeney111@gmail.com', 2, 1),
-        ('Trần Gia Nguyễn', 1, '2004-07-17', '0387913347', 'trangianguyen.com@gmail.com', 2, 1),
-        ('Hoàng Gia Bảo', 1, '2003-04-11', '0355374322', 'musicanime2501@gmail.com', 2, 1);
+        ('Trần Gia Nguyễn', 1, '2004-07-17', '0387913347', 'trangianguyen.com@gmail.com', 3, 1),
+        ('Hoàng Gia Bảo', 1, '2003-04-11', '0355374322', 'musicanime2501@gmail.com', 3, 1);
 
 INSERT INTO `CHUCVU` (`TEN`, `MUCLUONG`, `TT`)
 VALUES
         ('Quản lý tổng', 5000000, 1),
-        ('Nhân viên', 2000000, 1);
+        ('Quản lý giao dịch', 4000000, 1),
+        ('Nhân viên giao dịch', 2000000, 1);
 
 INSERT INTO `TAIKHOAN` (`MNV`, `TDN`, `MK`, `MNQ`, `TT`, `OTP`)
 VALUES
@@ -158,6 +172,16 @@ VALUES
         ('Nguyễn Thị Lan Anh', '456 Lê Lợi, Quận 1, TP. Hà Nội', '0965123456', 0, '2024-04-16 18:18:10'),
         ('Phạm Thị Mai', '234 Lê Hồng Phong, Quận 5, TP. Hồ Chí Minh', '0946789013', 0, '2024-04-17 18:18:34'),
         ('Hoàng Văn Nam', ' 567 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0912345679', 0, '2024-04-17 18:19:16');
+
+
+INSERT INTO `GIAODICH` (`MKH`, `MNV`, `TIEN`, `TT`)
+VALUES
+    (1, 3, 500000, 1),  -- Giao dịch của khách hàng có mã 1, nhân viên mã 3, số tiền 500000, trạng thái 1 (thành công)
+    (2, 3, 150000, 1),  -- Giao dịch của khách hàng có mã 2, nhân viên mã 3, số tiền 150000, trạng thái 1 (thành công)
+    (3, 3, 100000, 2),  -- Giao dịch của khách hàng có mã 3, nhân viên mã 3, số tiền 100000, trạng thái 2 (đang xử lý)
+    (4, 3, 200000, 1),  -- Giao dịch của khách hàng có mã 4, nhân viên mã 3, số tiền 200000, trạng thái 1 (thành công)
+    (5, 3, 750000, 0),  -- Giao dịch của khách hàng có mã 5, nhân viên mã 3, số tiền 750000, trạng thái 0 (hủy)
+    (6, 3, 120000, 1);  -- Giao dịch của khách hàng có mã 6, nhân viên mã 3, số tiền 120000, trạng thái 1 (thành công)
         
 /*Tạo quan hệ*/
 
@@ -169,6 +193,6 @@ ALTER TABLE `TAIKHOAN` ADD CONSTRAINT FK_MNQ_TAIKHOAN FOREIGN KEY (MNQ) REFERENC
 
 ALTER TABLE `NHANVIEN` ADD CONSTRAINT FK_MCV_NHANVIEN FOREIGN KEY (MCV) REFERENCES `CHUCVU`(MCV) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
-ALTER TABLE `CHUKY` ADD CONSTRAINT FK_MKH_CHUKY FOREIGN KEY (MKH) REFERENCES `KHACHHANG`(MKH) ON DELETE NO ACTION ON UPDATE NO ACTION;
-
+ALTER TABLE `GIAODICH` ADD CONSTRAINT FK_MNV_GIAODICH FOREIGN KEY (MNV) REFERENCES `NHANVIEN`(MNV) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE `GIAODICH` ADD CONSTRAINT FK_MKH_GIAODICH FOREIGN KEY (MKH) REFERENCES `KHACHHANG`(MKH) ON DELETE NO ACTION ON UPDATE NO ACTION;
 COMMIT;
