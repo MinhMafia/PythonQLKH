@@ -50,16 +50,20 @@ class TaiKhoanDAO:
         return result
 
     def update_pass(self, email: str, password: str):
+        result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "UPDATE TAIKHOAN TK JOIN NHANVIEN NV ON TK.MNV = NV.MNV SET MK = %s WHERE NV.EMAIL = %s"
+            sql = "UPDATE TAIKHOAN TK JOIN NHANVIEN NV ON TK.MNV = NV.MNV SET TK.MK = %s WHERE NV.EMAIL = %s"
             cursor = con.cursor()
             cursor.execute(sql, (password, email))
             con.commit()
+            result = cursor.rowcount  # Số dòng bị ảnh hưởng
             DatabaseManager.close_connection(con)
         except Error as e:
-            print(f"Error: {e}")
-        
+            print(f"Error updating password: {e}")
+            raise e
+        return result
+
     def select_all():
         result = []
         try:
@@ -132,16 +136,12 @@ class TaiKhoanDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-
             sql = "SELECT TT FROM TAIKHOAN WHERE TDN = %s"
             cursor.execute(sql, (username,))
             result = cursor.fetchone()
-
             if result and result["TT"] == -1:
                 is_inactive = True
-
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
-
         return is_inactive

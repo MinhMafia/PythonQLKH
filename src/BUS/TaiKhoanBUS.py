@@ -1,10 +1,8 @@
 from DAO.TaiKhoanDAO import TaiKhoanDAO
-# from DAO.NhomQuyenDAO import NhomQuyenDAO
 
 class TaiKhoanBUS:
     def __init__(self):
         self.listTaiKhoan = TaiKhoanDAO.select_all()
-        # self.nhomQuyenDAO = NhomQuyenDAO()
 
     def get_tai_khoan_all():
         return TaiKhoanDAO.select_all()
@@ -23,9 +21,6 @@ class TaiKhoanBUS:
             if tk.MNV == manv:
                 return index
         return -1
-
-    # def get_nhom_quyen_dto(self, manhom):
-    #     return self.nhomQuyenDAO.select_by_id(str(manhom))
 
     def add_acc(self, tk):
         TaiKhoanDAO.insert(tk)
@@ -52,10 +47,17 @@ class TaiKhoanBUS:
         return result
 
     def doi_mat_khau(self, id, new_password):
-        TaiKhoanDAO.update_pass_by_mnv(id, new_password)
+        from BUS.NhanVienBUS import NhanVienBUS
+        nhanvien_bus = NhanVienBUS()
+        nhanvien = nhanvien_bus.find_nhan_vien_by_ma_nhan_vien(id)
+        if nhanvien and nhanvien.EMAIL:
+            result = TaiKhoanDAO.get_instance().update_pass(nhanvien.EMAIL, new_password)
+            return result
+        else:
+            raise Exception("Không tìm thấy email của nhân viên để cập nhật mật khẩu!")
 
     def find_tai_khoan_by_ma_nhan_vien(self, ma_nhan_vien):
         return next((tk for tk in self.get_tai_khoan_all() if tk.MNV == ma_nhan_vien), None)
 
     def kt(self, username):
-            return TaiKhoanDAO.is_account_inactive(username)
+        return TaiKhoanDAO.is_account_inactive(username)
