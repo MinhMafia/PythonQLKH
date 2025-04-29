@@ -21,7 +21,7 @@ currentDir = Path(__file__).parent
 listTaiKhoan = []
 
 # Tùy chọn gửi email hoặc hiển thị OTP qua messagebox
-USE_EMAIL = False  # Đặt thành True để thử gửi email, False để hiển thị OTP qua messagebox
+USE_EMAIL = True  # Đặt thành True để thử gửi email, False để hiển thị OTP qua messagebox
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -39,8 +39,8 @@ def is_valid_email(email):
 
 def send_otp_email(receiver_email, otp):
     # Cấu hình thông tin gửi email
-    sender_email = "your_real_gmail@gmail.com"  # Thay bằng email của bạn
-    sender_password = "yfaqmothhtzeciwd"  # Thay bằng mật khẩu ứng dụng của Gmail
+    sender_email = "nguyentrannhathuy2018tqn@gmail.com"  # Thay bằng email của bạn
+    sender_password = "yvenxvptjwksvtql"  # Thay bằng mật khẩu ứng dụng của Gmail
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
 
@@ -151,8 +151,8 @@ def open_forgot_password_window(root):
     root.withdraw()
     forgot_window = ctk.CTkToplevel(root)
     forgot_window.title("Quên mật khẩu")
-    forgot_window.geometry("700x300")
-    component.CanGiuaCuaSo(forgot_window, 700, 300)
+    forgot_window.geometry("700x320")
+    component.CanGiuaCuaSo(forgot_window, 700, 320)
 
     main_frame = ctk.CTkFrame(forgot_window)
     main_frame.pack(fill="both", expand=True)
@@ -178,86 +178,105 @@ def open_forgot_password_window(root):
     temp_email = None
 
     ctk.CTkLabel(frame, text="Tên đăng nhập:", text_color="black").pack(anchor="w", pady=2)
-    entry_username_forgot = ctk.CTkEntry(frame, width=200)
-    entry_username_forgot.pack(pady=2)
+    entry_username = ctk.CTkEntry(frame, width=200)
+    entry_username.pack(pady=2)
 
-    ctk.CTkLabel(frame, text="Mã Nhân Viên (MaNV):", text_color="black").pack(anchor="w", pady=2)
-    entry_manv_forgot = ctk.CTkEntry(frame, width=200)
-    entry_manv_forgot.pack(pady=2)
+    ctk.CTkLabel(frame, text="Email đã đăng ký:", text_color="black").pack(anchor="w", pady=2)
+    entry_email = ctk.CTkEntry(frame, width=200)
+    entry_email.pack(pady=2)
 
-    def request_otp():
+    def send_otp_step():
         nonlocal temp_otp, temp_username, temp_email
-        username = entry_username_forgot.get()
-        manv_str = entry_manv_forgot.get()
 
-        if not username or not manv_str:
-            messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ thông tin!")
+        username = entry_username.get()
+        email = entry_email.get()
+
+        if not username or not email:
+            messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ tên đăng nhập và email.")
             return
 
-        try:
-            manv = int(manv_str)
-        except ValueError:
-            messagebox.showerror("Lỗi", "Mã Nhân Viên phải là số nguyên!")
+        if not is_valid_email(email):
+            messagebox.showerror("Lỗi", "Định dạng email không hợp lệ!")
             return
 
         users = load_users()
         user = next((u for u in users if u.TDN == username), None)
+
         if not user:
             messagebox.showerror("Lỗi", "Tên đăng nhập không tồn tại!")
             return
 
-        try:
-            nhanvien_bus = NhanVienBUS()
-            nhanvien = nhanvien_bus.find_nhan_vien_by_ma_nhan_vien(manv)
-            print(f"Nhân viên: MNV={nhanvien.MNV}, HOTEN={nhanvien.HOTEN}, EMAIL={nhanvien.EMAIL}")
-            if not nhanvien:
-                messagebox.showerror("Lỗi", "Không tìm thấy thông tin nhân viên với MaNV này!")
-                return
-            temp_email = nhanvien.EMAIL
-            if not temp_email:
-                messagebox.showerror("Lỗi", "Nhân viên này chưa có email trong hệ thống!")
-                return
-        except Exception as e:
-            messagebox.showerror("Lỗi", f"Không thể lấy thông tin nhân viên: {e}")
+        nhanvien = NhanVienBUS().find_nhan_vien_by_ma_nhan_vien(user.MNV)
+        if not nhanvien or not nhanvien.EMAIL:
+            messagebox.showerror("Lỗi", "Không tìm thấy email của nhân viên.")
             return
 
-        temp_otp = generate_otp()
+        if nhanvien.EMAIL.strip().lower() != email.strip().lower():
+            messagebox.showerror("Lỗi", "Email không khớp với tài khoản!")
+            return
+
+        temp_email = email
         temp_username = username
+        temp_otp = generate_otp()
 
-        # Gửi OTP qua email hoặc hiển thị qua messagebox
-        if USE_EMAIL:
-            if send_otp_email(temp_email, temp_otp):
-                messagebox.showinfo("Thành công", f"Mã OTP đã được gửi đến email: {temp_email}\nVui lòng kiểm tra email của bạn!")
-            else:
-                messagebox.showerror("Lỗi", "Không thể gửi mã OTP qua email. Vui lòng thử lại!")
+        if send_otp_email(temp_email, temp_otp):
+            messagebox.showinfo("Thành công", f"Mã OTP đã được gửi đến email: {temp_email}")
+            show_otp_entry()
         else:
-            messagebox.showinfo("Thành công", f"Mã OTP: {temp_otp}\n(Vui lòng sử dụng mã này để đặt lại mật khẩu)")
+            temp_otp = None
 
+    def show_otp_entry():
         for widget in frame.winfo_children():
             widget.destroy()
 
-        ctk.CTkLabel(frame, text="Nhập mã OTP:", text_color="black").pack(anchor="w", pady=2)
+        ctk.CTkLabel(frame, text="Nhập mã OTP được gửi qua email:", text_color="black").pack(anchor="w", pady=2)
         entry_otp = ctk.CTkEntry(frame, width=200)
         entry_otp.pack(pady=2)
 
-        ctk.CTkLabel(frame, text="Mật khẩu mới:", text_color="black").pack(anchor="w", pady=2)
-        entry_new_password = ctk.CTkEntry(frame, show="*", width=200)
-        entry_new_password.pack(pady=2)
-
-        def verify_otp_and_reset():
+        def confirm_otp():
             entered_otp = entry_otp.get()
-            new_password = entry_new_password.get()
 
-            if not entered_otp or not new_password:
-                messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ thông tin!")
+            if not entered_otp:
+                messagebox.showerror("Lỗi", "Vui lòng nhập mã OTP.")
                 return
 
             if entered_otp != temp_otp:
                 messagebox.showerror("Lỗi", "Mã OTP không đúng!")
                 return
 
-            users = load_users()
-            user = next((u for u in users if u.TDN == temp_username), None)
+            show_password_reset()
+
+        btn_confirm = ctk.CTkButton(frame, text="Xác nhận OTP", fg_color="#008000", command=confirm_otp)
+        btn_confirm.pack(pady=10)
+
+        btn_back = ctk.CTkButton(frame, text="Quay lại", fg_color="#808080", command=back_to_login)
+        btn_back.pack()
+
+    def show_password_reset():
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+        ctk.CTkLabel(frame, text="Mật khẩu mới:", text_color="black").pack(anchor="w", pady=2)
+        entry_new_password = ctk.CTkEntry(frame, show="*", width=200)
+        entry_new_password.pack(pady=2)
+
+        ctk.CTkLabel(frame, text="Xác nhận mật khẩu mới:", text_color="black").pack(anchor="w", pady=2)
+        entry_confirm_password = ctk.CTkEntry(frame, show="*", width=200)
+        entry_confirm_password.pack(pady=2)
+
+        def save_new_password():
+            new_password = entry_new_password.get()
+            confirm_password = entry_confirm_password.get()
+
+            if not new_password or not confirm_password:
+                messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ mật khẩu.")
+                return
+
+            if new_password != confirm_password:
+                messagebox.showerror("Lỗi", "Xác nhận mật khẩu không trùng khớp!")
+                return
+
+            user = next((u for u in load_users() if u.TDN == temp_username), None)
             if not user:
                 messagebox.showerror("Lỗi", "Tài khoản không tồn tại!")
                 return
@@ -265,21 +284,19 @@ def open_forgot_password_window(root):
             try:
                 result = TaiKhoanBUS().doi_mat_khau(user.MNV, hash_password(new_password))
                 if result > 0:
-                    messagebox.showinfo("Thành công", "Mật khẩu đã được đặt lại thành công!")
+                    messagebox.showinfo("Thành công", "Mật khẩu đã được đổi thành công.")
                     forgot_window.destroy()
                     fade_transition(root, lambda: root.deiconify(), new_geometry="500x250")
                 else:
-                    messagebox.showerror("Lỗi", "Không thể cập nhật mật khẩu: Không tìm thấy tài khoản phù hợp!")
+                    messagebox.showerror("Lỗi", "Không thể cập nhật mật khẩu.")
             except Exception as e:
-                messagebox.showerror("Lỗi", f"Không thể cập nhật mật khẩu: {e}")
+                messagebox.showerror("Lỗi", f"Lỗi đổi mật khẩu: {e}")
 
-        button_frame = ctk.CTkFrame(frame, fg_color="white")
-        button_frame.pack(pady=10)
+        btn_save = ctk.CTkButton(frame, text="Lưu mật khẩu", fg_color="#008000", command=save_new_password)
+        btn_save.pack(pady=10)
 
-        btn_verify = ctk.CTkButton(button_frame, text="Xác nhận OTP", font=("Arial", 12, "bold"), fg_color="#008000", command=verify_otp_and_reset)
-        btn_verify.grid(row=0, column=0, padx=5)
-        btn_back = ctk.CTkButton(button_frame, text="Quay lại", font=("Arial", 12, "bold"), fg_color="#008000", command=lambda: back_to_login())
-        btn_back.grid(row=0, column=1, padx=5)
+        btn_back = ctk.CTkButton(frame, text="Quay lại", fg_color="#808080", command=back_to_login)
+        btn_back.pack()
 
     def back_to_login():
         forgot_window.destroy()
@@ -288,12 +305,14 @@ def open_forgot_password_window(root):
     button_frame = ctk.CTkFrame(frame, fg_color="white")
     button_frame.pack(pady=10)
 
-    btn_request_otp = ctk.CTkButton(button_frame, text="Gửi mã OTP", font=("Arial", 12, "bold"), fg_color="#008000", command=request_otp)
-    btn_request_otp.grid(row=0, column=0, padx=5)
-    btn_back = ctk.CTkButton(button_frame, text="Quay lại", font=("Arial", 12, "bold"), fg_color="#008000", command=back_to_login)
+    btn_send = ctk.CTkButton(button_frame, text="Gửi mã OTP", font=("Arial", 12, "bold"), fg_color="#008000", command=send_otp_step)
+    btn_send.grid(row=0, column=0, padx=5)
+    btn_back = ctk.CTkButton(button_frame, text="Quay lại", font=("Arial", 12, "bold"), fg_color="#808080", command=back_to_login)
     btn_back.grid(row=0, column=1, padx=5)
 
     forgot_window.grab_set()
+
+
 
 def main(root):
     global entry_username, entry_password
