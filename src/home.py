@@ -6,6 +6,7 @@ import tkinter.ttk as ttk
 
 import component as comp
 import KhachHang, NhanVien, TaiKhoan
+import login
 # from verification import load_verification_interface
 # from verification_new import load_verification_interface
 
@@ -15,15 +16,65 @@ ctk.set_default_color_theme("blue")  # Chủ đề màu xanh
 # Đường dẫn thư mục hiện tại
 currentDir = Path(__file__).parent
 
+def fade_transition(root, callback, duration=300, new_geometry=None):
+    # Tạo một màn hình chuyển tiếp
+    transition_frame = ctk.CTkFrame(root, fg_color="black")
+    transition_frame.pack(fill="both", expand=True)
+
+    # Lấy kích thước và vị trí hiện tại của cửa sổ
+    root.update_idletasks()
+    current_width = root.winfo_width()
+    current_height = root.winfo_height()
+    current_x = root.winfo_x()
+    current_y = root.winfo_y()
+
+    # Nếu có new_geometry, tính toán kích thước và vị trí mục tiêu
+    if new_geometry:
+        target_width, target_height = map(int, new_geometry.split("x"))
+        # Tính vị trí mục tiêu để căn giữa
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        target_x = (screen_width - target_width) // 2
+        target_y = (screen_height - target_height) // 2
+    else:
+        target_width, target_height = current_width, current_height
+        target_x, target_y = current_x, current_y
+
+    def fade_in(step=0):
+        steps = duration // 30  # Chia thời gian thành các bước (30ms mỗi bước)
+        alpha = step / steps
+        if step <= steps:
+            # Cập nhật màu nền (hiệu ứng mờ dần)
+            transition_frame.configure(fg_color=f"#{int(255 * alpha):02x}{int(255 * alpha):02x}{int(255 * alpha):02x}")
+            # Tính toán kích thước và vị trí mới
+            new_width = int(current_width + (target_width - current_width) * (step / steps))
+            new_height = int(current_height + (target_height - current_height) * (step / steps))
+            new_x = int(current_x + (target_x - current_x) * (step / steps))
+            new_y = int(current_y + (target_y - current_y) * (step / steps))
+            # Cập nhật kích thước và vị trí cửa sổ
+            root.geometry(f"{new_width}x{new_height}+{new_x}+{new_y}")
+            root.after(30, fade_in, step + 1)
+        else:
+            transition_frame.destroy()
+            # Đảm bảo kích thước và vị trí cuối cùng chính xác
+            if new_geometry:
+                root.geometry(new_geometry)
+                comp.CanGiuaCuaSo(root, target_width, target_height)
+            callback()
+
+    fade_in()
+
 
 def homeRun(root):
     root.title("Trang chủ")
     for widget in root.winfo_children():
         widget.destroy()  # Xóa giao diện cũ để chuyển sang home
 
-    comp.CanGiuaCuaSo(root, 1000, 650)
+    setup_home(root)
 
-    # Chia thành 2 Frame
+def setup_home(root):
+    root.title("Trang chủ")
+
     frame_left = ctk.CTkFrame(root, width=250, height=650, corner_radius=0)
     frame_left.pack(side="left", fill="y")
 
@@ -74,10 +125,10 @@ def homeRun(root):
     def logout():
         for widget in root.winfo_children():
             widget.destroy()
-        
-        import login
-        login.root = root  # Truyền root vào module login
-        login.main()  # Hiện lại cửa sổ đăng nhập
+        ctk.set_appearance_mode("light")
+        # Thêm hiệu ứng chuyển đổi với kích thước mới
+        fade_transition(root, lambda: login.main(root), new_geometry="500x250")
+
 
     # Chia frame_left thanh 2
     frame_left_account = ctk.CTkFrame(frame_left, width=250, height=100)
