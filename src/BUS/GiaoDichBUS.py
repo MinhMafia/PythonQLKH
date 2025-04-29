@@ -23,7 +23,8 @@ class GiaoDichBUS:
 
     def add_giao_dich(self, gd):
         # Thêm một giao dịch mới
-        GiaoDichDAO.insert(gd)
+        dao = GiaoDichDAO()  # Tạo instance của GiaoDichDAO
+        dao.insert(gd)
 
     def update_giao_dich(self, gd):
         # Cập nhật thông tin giao dịch
@@ -59,3 +60,7 @@ class GiaoDichBUS:
         if gd:
             gd.TIEN = new_amount
             dao.update(gd)
+    
+    def get_max_mgd(self):
+        return GiaoDichDAO.get_max_mgd()
+    

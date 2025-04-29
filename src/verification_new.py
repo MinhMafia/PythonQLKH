@@ -14,7 +14,7 @@ from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 
 from DTO.KhanhHangDTO import KhachHangDTO
-from config.DatabaseManager import DatabaseManager
+# from config.DatabaseManager import DatabaseManager
 from BUS.KhachHangBUS import KhachHangBUS
 from pathlib import Path 
 from sklearn.model_selection import train_test_split
@@ -35,9 +35,9 @@ model_path = os.path.join(model_dir, "signature_model.keras")  # Sử dụng đ�
 image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
 
 # Kết nối với database MySQL
-db_manager = DatabaseManager()
-conn = db_manager.get_connection()
-cursor = conn.cursor(dictionary=True)
+# db_manager = DatabaseManager()
+# conn = db_manager.get_connection()
+# cursor = conn.cursor(dictionary=True)
 
 # Hàm huấn luyện mô hình VGG16 với tăng cường dữ liệu
 def train_vgg16_model():
@@ -416,10 +416,10 @@ class SignatureVerificationApp:
 #     app = SignatureVerificationApp(root)
 #     root.mainloop()
 
-def load_verification_interface(parent_frame):
-    # Xóa nội dung cũ trong frame
-    for widget in parent_frame.winfo_children():
-        widget.destroy()
-    app = SignatureVerificationApp(parent_frame)
+# def load_verification_interface(parent_frame):
+#     # Xóa nội dung cũ trong frame
+#     for widget in parent_frame.winfo_children():
+#         widget.destroy()
+#     app = SignatureVerificationApp(parent_frame)
 # Đóng kết nối database
-db_manager.close_connection(conn)
+# db_manager.close_connection(conn)

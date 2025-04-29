@@ -124,3 +124,19 @@ class GiaoDichDAO:
         except Error as e:
             print(f"Error: {e}")
         return result
+
+    @staticmethod
+    def get_max_mgd():
+        max_mgd = 0
+        try:
+            con = DatabaseManager.get_connection()
+            cursor = con.cursor()
+            sql = "SELECT MAX(MGD) AS max_mgd FROM GIAODICH"
+            cursor.execute(sql)
+            row = cursor.fetchone()
+            if row and row[0]:
+                max_mgd = row[0]
+            DatabaseManager.close_connection(con)
+        except Error as e:
+            print(f"Error: {e}")
+        return max_mgd

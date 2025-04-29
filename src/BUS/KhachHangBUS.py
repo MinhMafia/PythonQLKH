@@ -27,6 +27,9 @@ class KhachHangBUS:
     def delete_khach_hang(self, makh):
         KhachHangDAO.delete(makh)
 
+    def find_khach_hang_by_cccd(self, cccd):
+        return KhachHangDAO.select_by_cccd(cccd)
+
     def search(self, txt, type):
         txt = txt.lower()
         result = []

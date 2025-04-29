@@ -65,6 +65,32 @@ class KhachHangDAO:
             print(f"Error: {e}")
         return result
 
+    @staticmethod
+    def select_by_cccd(cccd):
+        result = None
+        try:
+            con = DatabaseManager.get_connection()
+            cursor = con.cursor(dictionary=True)
+            sql = "SELECT * FROM KHACHHANG WHERE CCCD = %s"
+            cursor.execute(sql, (cccd,))
+            row = cursor.fetchone()
+            if row:
+                result = KhachHangDTO(
+                    MKH=row["MKH"],
+                    HOTEN=row["HOTEN"],
+                    NGAYTHAMGIA=row["NGAYTHAMGIA"],
+                    DIACHI=row["DIACHI"],
+                    SDT=row["SDT"],
+                    EMAIL=row["EMAIL"],
+                    CCCD=row["CCCD"],
+                    TIEN=row["TIEN"],
+                    TT=row["TT"]
+                )
+            DatabaseManager.close_connection(con)
+        except Error as e:
+            print(f"Error: {e}")
+        return result
+
     def delete(self, mkh):
         result = 0
         try:

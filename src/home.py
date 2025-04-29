@@ -7,6 +7,7 @@ import tkinter.ttk as ttk
 import component as comp
 import KhachHang, NhanVien, TaiKhoan
 import login
+from YeuCauGiaoDich import TransactionRequestApp
 # from verification import load_verification_interface
 # from verification_new import load_verification_interface
 
@@ -115,6 +116,9 @@ def setup_home(root):
                     NhanVien.Staff(frame_right)
                 case "Account":
                     TaiKhoan.Account(frame_right)
+                case "TransactionRequest":
+                    # label = ctk.CTkLabel(frame_right, text="Yêu cầu giao dịch", font=("Arial", 50))
+                    TransactionRequestApp(frame_right)
                 case _:
                     raise ValueError("Trang không tồn tại")
         except Exception as e:
@@ -172,6 +176,9 @@ def setup_home(root):
 
     btnAccount = ctk.CTkButton(frame_left_menu, text="Tài khoản", command=lambda: show_frame("Account"))
     btnAccount.pack(pady=10, padx=20)
+
+    btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
+    btn_TransactionRequest.pack(pady=10, padx=20)
 
 
 
