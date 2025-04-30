@@ -64,7 +64,7 @@ class NhanVienDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor()
-            sql = "UPDATE NHANVIEN SET TT = -1 WHERE MNV = %s"
+            sql = "UPDATE NHANVIEN SET TT = 0 WHERE MNV = %s"
             cursor.execute(sql, (mnv,))
             con.commit()
             result = cursor.rowcount
