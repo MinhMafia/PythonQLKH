@@ -5,41 +5,41 @@ class TaiKhoanDTO:
     MNQ: int 
     TT: int
 
-    def __init__(self, MNV, MK, TDN, MNQ, TT):
+    def __init__(self, MNV, TDN, MK, MNQ, TT):
         self.MNV = MNV
         self.MK = MK
         self.TDN = TDN
         self.MNQ = MNQ
         self.TT = TT
 
-    def MNV(self):
+    def get_MNV(self):
         return self.MNV
     
-    def MNV(self, new_MNV):
+    def set_MNV(self, new_MNV):
         self.MNV = new_MNV
 
-    def MK(self):
+    def get_MK(self):
         return self.MK
     
-    def MK(self, new_MK):
+    def set_MK(self, new_MK):
         self.MK = new_MK
     
-    def TDN(self):
+    def get_TDN(self):
         return self.TDN
     
-    def TDN(self, new_TDN):
+    def set_TDN(self, new_TDN):
         self.TDN = new_TDN
     
-    def MNQ(self):
+    def get_MNQ(self):
         return self.MNQ
     
-    def MNQ(self, new_MNQ):
+    def set_MNQ(self, new_MNQ):
         self.MNQ = new_MNQ
     
-    def TT(self):
+    def get_TT(self):
         return self.TT
     
-    def TT(self, new_TT):
+    def set_TT(self, new_TT):
         self.TT = new_TT
     
     def __eq__(self, other):

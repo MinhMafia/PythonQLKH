@@ -2,10 +2,13 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 from tkinter import messagebox
 from BUS.TaiKhoanBUS import TaiKhoanBUS
+from BUS.NhanVienBUS import NhanVienBUS  # Nhập để kiểm tra MNV
 import component as comp
 import re
+from login import hash_password  # Nhập hàm hash_password từ login.py
 
 AccountBUS = TaiKhoanBUS()
+NhanVienBUS = NhanVienBUS()
 
 def load_tai_khoan():
     return TaiKhoanBUS.get_tai_khoan_all()
@@ -76,12 +79,12 @@ def Account(frame_right):
         form_frame.pack(pady=10)
 
         fields = {}
-        labels = ["Mã nhân viên", "Tên đăng nhập", "Mã nhóm quyền", "Trạng thái"]
+        labels = ["Mã nhân viên", "Tên đăng nhập", "Mật khẩu", "Mã nhóm quyền", "Trạng thái"]
 
         for label_text in labels:
             label = ctk.CTkLabel(form_frame, text=f"{label_text}:", font=("Arial", 14))
             label.pack(pady=5)
-            entry = ctk.CTkEntry(form_frame, width=300)
+            entry = ctk.CTkEntry(form_frame, width=300, show="*" if label_text == "Mật khẩu" else "")
             entry.pack(pady=5)
             fields[label_text] = entry
 
@@ -93,6 +96,7 @@ def Account(frame_right):
             """Thêm tài khoản mới."""
             mnv = fields["Mã nhân viên"].get().strip()
             tdn = fields["Tên đăng nhập"].get().strip()
+            mk = fields["Mật khẩu"].get().strip()
             mnq = fields["Mã nhóm quyền"].get().strip()
             tt = fields["Trạng thái"].get().strip()
 
@@ -101,12 +105,16 @@ def Account(frame_right):
                 comp.show_notify(False, "Mã nhân viên phải là số.")
                 return
 
-            if not mnq.isdigit():
-                comp.show_notify(False, "Mã nhóm quyền phải là số.")
-                return
-
             if not tdn:
                 comp.show_notify(False, "Tên đăng nhập không được để trống.")
+                return
+
+            if not mk:
+                comp.show_notify(False, "Mật khẩu không được để trống.")
+                return
+
+            if not mnq.isdigit():
+                comp.show_notify(False, "Mã nhóm quyền phải là số.")
                 return
 
             if not tt.isdigit():
@@ -117,9 +125,24 @@ def Account(frame_right):
                 comp.show_notify(False, "Tên đăng nhập đã tồn tại.")
                 return
 
+            # Kiểm tra MNV tồn tại trong bảng NHANVIEN
+            try:
+                nhanvien = NhanVienBUS.find_nhan_vien_by_ma_nhan_vien(int(mnv))
+                if not nhanvien:
+                    comp.show_notify(False, "Mã nhân viên không tồn tại trong bảng NHANVIEN.")
+                    return
+            except Exception as e:
+                comp.show_notify(False, f"Lỗi khi kiểm tra mã nhân viên: {e}")
+                return
+
+            # Băm mật khẩu
+            hashed_password = hash_password(mk)
+            print(f"Adding account - MNV: {mnv}, TDN: {tdn}, MK (hashed): {hashed_password}, MNQ: {mnq}, TT: {tt}")
+
             new_account = {
                 "MNV": int(mnv),
                 "TDN": tdn,
+                "MK": hashed_password,
                 "MNQ": int(mnq),
                 "TT": int(tt),
             }
@@ -133,6 +156,7 @@ def Account(frame_right):
                 close_window()
             except Exception as e:
                 comp.show_notify(False, f"Không thể thêm tài khoản: {e}")
+                print(f"Error adding account: {e}")
 
         btn_frame = ctk.CTkFrame(win, fg_color="transparent")
         btn_frame.pack(pady=15)

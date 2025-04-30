@@ -1,4 +1,5 @@
 from DAO.TaiKhoanDAO import TaiKhoanDAO
+from DTO.TaiKhoanDTO import TaiKhoanDTO
 
 class TaiKhoanBUS:
     def __init__(self):
@@ -23,7 +24,16 @@ class TaiKhoanBUS:
         return -1
 
     def add_acc(self, tk):
-        TaiKhoanDAO.insert(tk)
+        account = TaiKhoanDTO(
+            MNV=tk["MNV"],
+            TDN=tk["TDN"],
+            MK=tk.get("MK", ""),
+            MNQ=tk["MNQ"],
+            TT=tk["TT"]
+        )
+        print(f"TaiKhoanBUS: Creating account - MNV: {account.MNV}, TDN: {account.TDN}, MK: {account.MK}, MNQ: {account.MNQ}, TT: {account.TT}")
+        TaiKhoanDAO().insert(account)  # Sửa ở đây
+
 
     def update_acc(self, tk):
         TaiKhoanDAO.update(tk)

@@ -141,7 +141,7 @@ VALUES
         ('Huỳnh Khôi Nguyên', 1, '2023-05-06', '0123456789', 'nguyeney111@gmail.com', 2, 1),
         ('Trần Gia Nguyễn', 1, '2004-07-17', '0387913347', 'trangianguyen.com@gmail.com', 3, 1),
         ('Hoàng Gia Bảo', 1, '2003-04-11', '0355374322', 'musicanime2501@gmail.com', 3, 1),
-        (5, 'Nguyễn Trần Nhật Huy', 1, '2005-05-21', '0334607177', 'nguyentrannhathuy2018tqn@gmail.com', 2, 1);
+        ('Nguyễn Trần Nhật Huy', 1, '2005-05-21', '0334607177', 'nguyentrannhathuy2018tqn@gmail.com', 2, 1);
 
 INSERT INTO `CHUCVU` (`TEN`, `MUCLUONG`, `TT`)
 VALUES
@@ -152,7 +152,7 @@ VALUES
 INSERT INTO `TAIKHOAN` (`MNV`, `MK`, `TDN`, `MNQ`, `TT`, `OTP`) VALUES
 (1, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'admin', 1, 1, 'null'),
 (2, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'NV2', 2, 1, 'null'),
-(5, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'NV5', 2, 1, NULL);
+(5, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'NV5', 2, 1, 'null');
 
 INSERT INTO `KHACHHANG` (`HOTEN`, `DIACHI`, `SDT`, `CCCD`, `TIEN`, `TT`, `NGAYTHAMGIA`)
 VALUES

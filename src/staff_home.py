@@ -8,6 +8,9 @@ from datetime import datetime
 from BUS.GiaoDichBUS import GiaoDichBUS
 from DTO.GiaoDichDTO import GiaoDichDTO
 from BUS.KhachHangBUS import KhachHangBUS
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+import csv
 
 # Đường dẫn thư mục hiện tại
 currentDir = Path(__file__).parent
@@ -318,38 +321,85 @@ def update_transaction_status(frame_right, giao_dich_bus, khach_hang_bus):
 
     ctk.CTkButton(form_frame, text="Cập nhật", command=submit).pack(pady=20)
 
+
+
+
 def generate_report(frame_right, giao_dich_bus):
     main_frame = ctk.CTkFrame(frame_right, fg_color="transparent")
     main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-    title_label = ctk.CTkLabel(main_frame, text="Báo cáo giao dịch", font=("Arial", 20, "bold"))
-    title_label.pack(anchor="w", pady=5)
+    title_label = ctk.CTkLabel(main_frame, text="📊 Báo cáo giao dịch", font=("Arial", 22, "bold"))
+    title_label.pack(anchor="w", pady=10)
 
-    filter_frame = ctk.CTkFrame(main_frame)
-    filter_frame.pack(fill="x", pady=5)
+    # Layout form chia ngang
+    form_container = ctk.CTkFrame(main_frame)
+    form_container.pack(fill="x", pady=10)
 
-    ctk.CTkLabel(filter_frame, text="Mã khách hàng (MKH, để trống để xem tất cả):").pack(anchor="w", pady=5)
-    entry_mkh = ctk.CTkEntry(filter_frame, placeholder_text="Nhập MKH")
+    form_left = ctk.CTkFrame(form_container)
+    form_left.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
+    form_right = ctk.CTkFrame(form_container)
+    form_right.pack(side="left", fill="x", expand=True, padx=(10, 0))
+
+    ctk.CTkLabel(form_left, text="🔎 Mã khách hàng (MKH):", font=("Arial", 14)).pack(anchor="w", pady=2)
+    entry_mkh = ctk.CTkEntry(form_left, placeholder_text="Nhập MKH")
     entry_mkh.pack(fill="x", pady=5)
 
-    ctk.CTkLabel(filter_frame, text="Từ ngày (YYYY-MM-DD):").pack(anchor="w", pady=5)
-    entry_from_date = ctk.CTkEntry(filter_frame, placeholder_text="VD: 2024-01-01")
+    ctk.CTkLabel(form_left, text="📅 Từ ngày (YYYY-MM-DD):", font=("Arial", 14)).pack(anchor="w", pady=2)
+    entry_from_date = ctk.CTkEntry(form_left, placeholder_text="VD: 2024-01-01")
     entry_from_date.pack(fill="x", pady=5)
 
-    ctk.CTkLabel(filter_frame, text="Đến ngày (YYYY-MM-DD):").pack(anchor="w", pady=5)
-    entry_to_date = ctk.CTkEntry(filter_frame, placeholder_text="VD: 2024-12-31")
+    ctk.CTkLabel(form_left, text="📅 Đến ngày (YYYY-MM-DD):", font=("Arial", 14)).pack(anchor="w", pady=2)
+    entry_to_date = ctk.CTkEntry(form_left, placeholder_text="VD: 2024-12-31")
     entry_to_date.pack(fill="x", pady=5)
+
+    ctk.CTkLabel(form_right, text="📌 Trạng thái giao dịch:", font=("Arial", 14)).pack(anchor="w", pady=2)
+    status_filter_var = ctk.StringVar(value="Tất cả")
+    status_menu = ctk.CTkOptionMenu(form_right, values=["Tất cả", "Thành công", "Hủy", "Đang xử lý"], variable=status_filter_var)
+    status_menu.pack(fill="x", pady=5)
 
     report_frame = ctk.CTkFrame(main_frame)
     report_frame.pack(fill="both", expand=True)
 
+    chart_canvas = None
+
+    def show_chart(status_data):
+        nonlocal chart_canvas
+        fig, ax = plt.subplots(figsize=(5, 4))
+        labels = ["Thành công", "Hủy", "Đang xử lý"]
+        values = [status_data[s] for s in labels]
+        colors = ["green", "red", "orange"]
+
+        ax.bar(labels, values, color=colors)
+        ax.set_title("Số lượng giao dịch theo trạng thái")
+
+        if chart_canvas:
+            chart_canvas.get_tk_widget().destroy()
+
+        chart_canvas = FigureCanvasTkAgg(fig, master=report_frame)
+        chart_canvas.draw()
+        chart_canvas.get_tk_widget().pack(pady=10)
+
+    def export_csv(transactions):
+        path = "bao_cao_giao_dich.csv"
+        with open(path, mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(["Mã GD", "Mã KH", "Mã NV", "Ngày GD", "Số tiền", "Số dư KH", "Trạng thái"])
+            for gd in transactions:
+                status = {0: "Hủy", 1: "Thành công", 2: "Đang xử lý"}.get(gd.TT, "Không xác định")
+                writer.writerow([gd.MGD, gd.MKH, gd.MNV, gd.NGAYGIAODICH, gd.TIEN, gd.TIENKH, status])
+        messagebox.showinfo("Thành công", f"Đã xuất báo cáo ra file: {path}")
+
     def update_report():
+        nonlocal chart_canvas
         for widget in report_frame.winfo_children():
             widget.destroy()
+        chart_canvas = None
 
         mkh = entry_mkh.get().strip()
         from_date = entry_from_date.get().strip()
         to_date = entry_to_date.get().strip()
+        selected_status = status_filter_var.get()
 
         transactions = giao_dich_bus.get_giao_dich_all()
 
@@ -378,53 +428,48 @@ def generate_report(frame_right, giao_dich_bus):
                     continue
                 if to_date and gd_date > to_date:
                     continue
+                if selected_status != "Tất cả":
+                    if selected_status == "Thành công" and gd.TT != 1:
+                        continue
+                    elif selected_status == "Hủy" and gd.TT != 0:
+                        continue
+                    elif selected_status == "Đang xử lý" and gd.TT != 2:
+                        continue
                 filtered_transactions.append(gd)
             except ValueError:
                 continue
 
-        total_transactions = len(filtered_transactions)
-        ctk.CTkLabel(report_frame, text=f"Tổng số giao dịch: {total_transactions}", font=("Arial", 14)).pack(anchor="w", pady=5)
-
-        total_amount = sum(gd.TIEN for gd in filtered_transactions if gd.TT == 1)
-        ctk.CTkLabel(report_frame, text=f"Tổng số tiền (giao dịch thành công): {total_amount} VND", font=("Arial", 14)).pack(anchor="w", pady=5)
-
-        status_counts = {"Hủy": 0, "Thành công": 0, "Đang xử lý": 0}
+        status_data = {"Thành công": 0, "Hủy": 0, "Đang xử lý": 0}
+        status_amount = {"Thành công": 0, "Hủy": 0, "Đang xử lý": 0}
         for gd in filtered_transactions:
-            if gd.TT == 0:
-                status_counts["Hủy"] += 1
-            elif gd.TT == 1:
-                status_counts["Thành công"] += 1
-            elif gd.TT == 2:
-                status_counts["Đang xử lý"] += 1
+            status_text = {0: "Hủy", 1: "Thành công", 2: "Đang xử lý"}.get(gd.TT, "Không xác định")
+            if status_text in status_data:
+                status_data[status_text] += 1
+                status_amount[status_text] += gd.TIEN
 
-        for status, count in status_counts.items():
-            ctk.CTkLabel(report_frame, text=f"Số giao dịch {status}: {count}", font=("Arial", 14)).pack(anchor="w", pady=5)
+        summary_frame = ctk.CTkFrame(report_frame, fg_color="white", corner_radius=10)
+        summary_frame.pack(fill="x", padx=10, pady=10)
+        for status in status_data:
+            text = f"{status}: {status_data[status]} giao dịch - Tổng tiền: {status_amount[status]} VND"
+            ctk.CTkLabel(summary_frame, text=text, font=("Arial", 14), text_color="#2B2D42").pack(anchor="w", padx=20, pady=2)
+
+        ctk.CTkButton(report_frame, text="📊 Xem biểu đồ", command=lambda: show_chart(status_data)).pack(pady=5)
+        ctk.CTkButton(report_frame, text="📄 Xuất CSV", command=lambda: export_csv(filtered_transactions)).pack(pady=5)
 
         tree_frame = ctk.CTkFrame(report_frame)
         tree_frame.pack(fill="both", expand=True, pady=5)
-
-        # Tùy chỉnh style cho Treeview
         style = ttk.Style()
-        style.configure("Treeview", font=("Arial", 14), rowheight=30)  # Tăng font và chiều cao hàng
-        style.configure("Treeview.Heading", font=("Arial", 14, "bold"))  # Tăng font cho tiêu đề cột
+        style.configure("Treeview", font=("Arial", 13), rowheight=28)
+        style.configure("Treeview.Heading", font=("Arial", 13, "bold"))
 
         tree = ttk.Treeview(tree_frame, columns=("MGD", "MKH", "MNV", "NgayGiaoDich", "Tien", "TienKH", "TrangThai"), show="headings")
-        tree.heading("MGD", text="Mã GD")
-        tree.heading("MKH", text="Mã KH")
-        tree.heading("MNV", text="Mã NV")
-        tree.heading("NgayGiaoDich", text="Ngày GD")
-        tree.heading("Tien", text="Số tiền")
-        tree.heading("TienKH", text="Số dư KH")
-        tree.heading("TrangThai", text="Trạng thái")
-
-        # Tăng chiều rộng cột
-        tree.column("MGD", width=50)  # Tăng từ 50 lên 80
-        tree.column("MKH", width=50)  # Tăng từ 50 lên 80
-        tree.column("MNV", width=50)  # Tăng từ 50 lên 80
-        tree.column("NgayGiaoDich", width=120)  # Tăng từ 120 lên 180
-        tree.column("Tien", width=100)  # Tăng từ 100 lên 150
-        tree.column("TienKH", width=100)  # Tăng từ 100 lên 150
-        tree.column("TrangThai", width=80)  # Tăng từ 80 lên 120
+        for col, title, width in [
+            ("MGD", "Mã GD", 70), ("MKH", "Mã KH", 70), ("MNV", "Mã NV", 70),
+            ("NgayGiaoDich", "Ngày GD", 140), ("Tien", "Số tiền", 100),
+            ("TienKH", "Số dư KH", 100), ("TrangThai", "Trạng thái", 100)
+        ]:
+            tree.heading(col, text=title)
+            tree.column(col, width=width)
 
         scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=scrollbar.set)
@@ -435,6 +480,5 @@ def generate_report(frame_right, giao_dich_bus):
             status = {0: "Hủy", 1: "Thành công", 2: "Đang xử lý"}.get(gd.TT, "Không xác định")
             tree.insert("", "end", values=(gd.MGD, gd.MKH, gd.MNV, gd.NGAYGIAODICH, gd.TIEN, gd.TIENKH, status))
 
-    ctk.CTkButton(filter_frame, text="Tạo báo cáo", command=update_report).pack(pady=10)
-
+    ctk.CTkButton(form_right, text="📥 Tạo báo cáo", font=("Arial", 14, "bold"), fg_color="#EF233C", command=update_report).pack(pady=10)
     update_report()
