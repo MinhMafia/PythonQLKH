@@ -10,7 +10,8 @@ import login
 from YeuCauGiaoDich import TransactionRequestApp
 # from verification import load_verification_interface
 # from verification_new import load_verification_interface
-
+from BUS.NhomQuyenBUS import NhomQuyenBUS
+from NhomQuyen import NhomQuyen
 class Home:
     def __init__(self):
         self.user = None
@@ -114,7 +115,9 @@ class Home:
                         TaiKhoan.Account(frame_right)
                     case "TransactionRequest":
                         # label = ctk.CTkLabel(frame_right, text="Yêu cầu giao dịch", font=("Arial", 50))
-                        TransactionRequestApp(frame_right)
+                        TransactionRequestApp(frame_right, self.user)
+                    case "NhomQuyen":
+                        NhomQuyen(frame_right)
                     case _:
                         raise ValueError("Trang không tồn tại")
             except Exception as e:
@@ -151,11 +154,18 @@ class Home:
         frame_text = ctk.CTkFrame(frame_left_account, fg_color="transparent")
         frame_text.pack(side="left", padx=5)
 
-        username_label = ctk.CTkLabel(frame_text, text="Username", font=("Arial", 12, "bold"))
+        # Hiển thị tên đăng nhập
+        username_label = ctk.CTkLabel(frame_text, text=f"Tài khoản: {self.user.TDN}", font=("Arial", 12, "bold"))
         username_label.pack(anchor="w")
 
-        role_label = ctk.CTkLabel(frame_text, text="Role_user", font=("Arial", 12, "bold"))
+        # Lấy tên nhóm quyền từ BUS
+        nhom_quyen_bus = NhomQuyenBUS()
+        role_name = nhom_quyen_bus.get_ten_nhom_quyen_by_mnq(self.user.MNQ)
+
+        # Hiển thị vai trò
+        role_label = ctk.CTkLabel(frame_text, text=f"Vai trò: {role_name}", font=("Arial", 12, "bold"))
         role_label.pack(anchor="w")
+
 
         # Thêm nút vào khung trái
         btnHome = ctk.CTkButton(frame_left_menu, text="🏠 Trang chủ", command=lambda: show_frame("Home"))
@@ -175,6 +185,9 @@ class Home:
 
         btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
         btn_TransactionRequest.pack(pady=10, padx=20)
+
+        btn_NhomQuyen = ctk.CTkButton(frame_left_menu, text="Nhóm quyền", command=lambda: show_frame("NhomQuyen"))
+        btn_NhomQuyen.pack(pady=10, padx=20)
 
 
 

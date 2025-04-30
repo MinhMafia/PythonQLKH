@@ -15,7 +15,9 @@ from DTO.GiaoDichDTO import GiaoDichDTO
 from datetime import datetime
 
 class TransactionRequestApp:
-    def __init__(self, parent):
+    def __init__(self, parent, current_user):
+        self.current_user = current_user  # Lưu thông tin nhân viên đang đăng nhập
+
         # Đường dẫn gốc của dự án
         self.currentDir = Path(__file__).parent
         self.base_dir = self.currentDir.parent / "database"
@@ -295,7 +297,7 @@ class TransactionRequestApp:
             giao_dich = GiaoDichDTO(
                 MGD=new_mgd,
                 MKH=self.selected_customer.MKH,
-                MNV=1,  # NV1
+                MNV=self.current_user.MNV,
                 NGAYGIAODICH=datetime.now(),
                 TIEN=transaction_amount,
                 TIENKH=new_balance,
