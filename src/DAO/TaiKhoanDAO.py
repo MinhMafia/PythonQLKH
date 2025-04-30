@@ -11,21 +11,23 @@ class TaiKhoanDAO:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "INSERT INTO TAIKHOAN (MNV, TDN, MK, MNQ, TT) VALUES (%d, %s, %s, %d, %d)"
+            sql = "INSERT INTO TAIKHOAN (MNV, TDN, MK, MNQ, TT) VALUES (%s, %s, %s, %s, %s)"
             cursor = con.cursor()
+            print(f"TaiKhoanDAO: Executing SQL - MNV: {t.MNV}, TDN: {t.TDN}, MK: {t.MK}, MNQ: {t.MNQ}, TT: {t.TT}")
             cursor.execute(sql, (t.MNV, t.TDN, t.MK, t.MNQ, t.TT))
             con.commit()
             result = cursor.rowcount
             DatabaseManager.close_connection(con)
         except Error as e:
-            print(f"Error: {e}")
+            print(f"Error inserting account: {e}")
+            raise e  # Ném lại lỗi để hiển thị trong TaiKhoan.py
         return result
 
     def update(self, t: TaiKhoanDTO) -> int:
         result = 0
         try:
             con = DatabaseManager.get_connection()
-            sql = "UPDATE TAIKHOAN SET TDN = %s, TT = %d, MNQ = %d WHERE MNV = %d"
+            sql = "UPDATE TAIKHOAN SET TDN = %s, TT = %s, MNQ = %s WHERE MNV = %s"
             cursor = con.cursor()
             cursor.execute(sql, (t.TDN, t.TT, t.MNQ, t.MNV))
             con.commit()
@@ -33,6 +35,7 @@ class TaiKhoanDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return result
 
     def update_tt_cxl(self, email: str) -> int:
@@ -47,6 +50,7 @@ class TaiKhoanDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return result
 
     def update_pass(self, email: str, password: str):
@@ -83,20 +87,22 @@ class TaiKhoanDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return result
     
-    def delete(mnv):
+    def delete(self, mnv):
         result = 0
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor()
-            sql = "UPDATE TAIKHOAN SET TT = -1 WHERE MNV = %d"
-            cursor.execute(sql, (mnv))
+            sql = "UPDATE TAIKHOAN SET TT = -1 WHERE MNV = %s"
+            cursor.execute(sql, (mnv,))
             con.commit()
             result = cursor.rowcount  # Số dòng bị ảnh hưởng
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return result
 
     @staticmethod
@@ -105,7 +111,7 @@ class TaiKhoanDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-            sql = "SELECT * FROM TAIKHOAN WHERE MNV = %d"
+            sql = "SELECT * FROM TAIKHOAN WHERE MNV = %s"
             cursor.execute(sql, (mnv,))
             row = cursor.fetchone()
             if row:
@@ -113,6 +119,7 @@ class TaiKhoanDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return result
 
     @staticmethod
@@ -129,9 +136,10 @@ class TaiKhoanDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return result
     
-    def is_account_inactive(username):
+    def is_account_inactive(self, username):
         is_inactive = False
         try:
             con = DatabaseManager.get_connection()
@@ -144,4 +152,5 @@ class TaiKhoanDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Error: {e}")
+            raise e
         return is_inactive

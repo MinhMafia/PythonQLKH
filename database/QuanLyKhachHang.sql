@@ -152,7 +152,7 @@ VALUES
 INSERT INTO `TAIKHOAN` (`MNV`, `MK`, `TDN`, `MNQ`, `TT`, `OTP`) VALUES
 (1, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'admin', 1, 1, 'null'),
 (2, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'NV2', 2, 1, 'null'),
-(5, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'NV5', 2, 1, NULL);
+(5, '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'NV5', 2, 1, 'null');
 
 INSERT INTO `KHACHHANG` (`HOTEN`, `DIACHI`, `SDT`, `CCCD`, `TIEN`, `TT`, `NGAYTHAMGIA`)
 VALUES
