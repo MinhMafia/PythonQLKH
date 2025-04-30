@@ -131,21 +131,23 @@ def login(root):
             check = False
             if user.MNQ == 1:
                 messagebox.showinfo("Thành công", "Đăng nhập thành công với quyền Admin!")
-                fade_transition(root, lambda: import_home_and_run(root), new_geometry="1000x650")
+                fade_transition(root, lambda: import_home_and_run(root, user), new_geometry="1000x650")
             elif user.MNQ == 2:
                 messagebox.showinfo("Thành công", "Đăng nhập thành công với quyền Nhân viên!")
-                fade_transition(root, lambda: import_staff_home_and_run(root), new_geometry="1000x650")
+                fade_transition(root, lambda: import_staff_home_and_run(root, user), new_geometry="1000x650")
             return
     if check:
         messagebox.showerror("Lỗi", "Đăng nhập thất bại!")
 
-def import_home_and_run(root):
-    import home
-    home.homeRun(root)
+def import_home_and_run(root, user):
+    from home import Home
+    screen = Home()
+    screen.homeRun(root, user)
 
-def import_staff_home_and_run(root):
-    import staff_home
-    staff_home.staffHomeRun(root)
+def import_staff_home_and_run(root, user):
+    from staff_home import Staff_home
+    screen = Staff_home()
+    screen.staffHomeRun(root, user)
 
 def open_forgot_password_window(root):
     root.withdraw()
