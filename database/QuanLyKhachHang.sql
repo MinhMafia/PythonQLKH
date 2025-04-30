@@ -141,7 +141,7 @@ VALUES
         ('Huỳnh Khôi Nguyên', 1, '2023-05-06', '0123456789', 'nguyeney111@gmail.com', 2, 1),
         ('Trần Gia Nguyễn', 1, '2004-07-17', '0387913347', 'trangianguyen.com@gmail.com', 3, 1),
         ('Hoàng Gia Bảo', 1, '2003-04-11', '0355374322', 'musicanime2501@gmail.com', 3, 1),
-        (5, 'Nguyễn Trần Nhật Huy', 1, '2005-05-21', '0334607177', 'nguyentrannhathuy2018tqn@gmail.com', 2, 1);
+        ('Nguyễn Trần Nhật Huy', 1, '2005-05-21', '0334607177', 'nguyentrannhathuy2018tqn@gmail.com', 2, 1);
 
 INSERT INTO `CHUCVU` (`TEN`, `MUCLUONG`, `TT`)
 VALUES
