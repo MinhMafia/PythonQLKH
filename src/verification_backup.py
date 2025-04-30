@@ -13,7 +13,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 
-from DTO.KhanhHangDTO import KhachHangDTO
+from DTO.KhachHangDTO import KhachHangDTO
 # from config.DatabaseManager import DatabaseManager
 from BUS.KhachHangBUS import KhachHangBUS
 from pathlib import Path 

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
-from DTO.KhanhHangDTO import KhachHangDTO
+from DTO.KhachHangDTO import KhachHangDTO
 from BUS.KhachHangBUS import KhachHangBUS
 from pathlib import Path 
 from sklearn.model_selection import train_test_split

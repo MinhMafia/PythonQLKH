@@ -13,7 +13,7 @@ from tkinter import ttk, messagebox, filedialog
 
 from tensorflow.keras.layers import Flatten
 from PIL import Image, ImageTk
-from DTO.KhanhHangDTO import KhachHangDTO
+from DTO.KhachHangDTO import KhachHangDTO
 from config.DatabaseManager import DatabaseManager
 import cv2  # Thêm OpenCV để xử lý ảnh
 

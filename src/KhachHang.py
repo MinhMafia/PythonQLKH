@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
 from BUS.KhachHangBUS import KhachHangBUS
-from DTO.KhanhHangDTO import KhachHangDTO  # Sửa import
+from DTO.KhachHangDTO import KhachHangDTO  # Sửa import
 import re
 from datetime import datetime
 from mysql.connector import Error
