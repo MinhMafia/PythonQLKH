@@ -319,17 +319,19 @@ def main(root):
     global user_icon, lock_icon
 
     root.title("Đăng nhập")
-    root.geometry("500x250")
-    component.CanGiuaCuaSo(root, 500, 250)
+    root.geometry("600x300")
+    component.CanGiuaCuaSo(root, 600, 300)
 
     for widget in root.winfo_children():
         widget.destroy()
 
-    main_frame = ctk.CTkFrame(root, fg_color="white")
+    main_frame = ctk.CTkFrame(root, fg_color="white", corner_radius=10)
     main_frame.pack(fill="both", expand=True)
 
-    left_frame = ctk.CTkFrame(main_frame, fg_color="#FFD700", width=150)
+    left_frame = ctk.CTkFrame(main_frame, fg_color="#3498db", corner_radius=10)  # Màu xanh dương nhẹ
     right_frame = ctk.CTkFrame(main_frame, fg_color="white")
+    right_frame.place(relx=0.75, rely=0.5, relwidth=0.5, relheight=1, anchor="center")
+
 
     left_frame.grid(row=0, column=0, sticky="nsew")
     right_frame.grid(row=0, column=1, sticky="nsew")
@@ -338,45 +340,56 @@ def main(root):
     main_frame.grid_columnconfigure(1, weight=2)
     main_frame.grid_rowconfigure(0, weight=1)
 
-    title_label = ctk.CTkLabel(left_frame, text="WELLCOME TO APP", font=("Arial", 18, "bold"), text_color="white")
-    title_label.pack(pady=20, expand=True)
+    # Label title
+    title_label = ctk.CTkLabel(left_frame, text="WELCOME", font=("Arial", 20, "bold"), text_color="white")
+    title_label.place(relx=0.5, rely=0.5, anchor="center")
 
+    # Load icons
     try:
         userImage_path = currentDir / "img" / "user.png"
         lockImage_path = currentDir / "img" / "lock.jpg"
-        if not userImage_path.exists() or not lockImage_path.exists():
-            print("Image files not found!")
-            return
         user_icon = ctk.CTkImage(light_image=Image.open(userImage_path), size=(25, 20))
         lock_icon = ctk.CTkImage(light_image=Image.open(lockImage_path), size=(25, 20))
     except Exception as e:
         print(f"Error loading images: {e}")
         return
 
-    frame_user = ctk.CTkFrame(right_frame, fg_color="white", border_width=2, corner_radius=5)
-    frame_user.pack(pady=10, padx=20, fill="x")
-    user_label = ctk.CTkLabel(frame_user, image=user_icon, text="")
-    user_label.pack(side="left", padx=5)
-    entry_username = ctk.CTkEntry(frame_user, font=("Arial", 12), border_width=0)
+    # Username entry
+    frame_user = ctk.CTkFrame(right_frame, fg_color="white", border_width=1, corner_radius=8)
+    frame_user.pack(pady=15, padx=20, fill="x")
+    ctk.CTkLabel(frame_user, image=user_icon, text="").pack(side="left", padx=8)
+    entry_username = ctk.CTkEntry(frame_user, placeholder_text="Tên đăng nhập", font=("Arial", 12), border_width=0)
     entry_username.pack(side="left", fill="x", expand=True, padx=5)
-    entry_username.insert(0, "admin")
 
-    frame_pass = ctk.CTkFrame(right_frame, fg_color="white", border_width=2, corner_radius=5)
+    # Password entry
+    frame_pass = ctk.CTkFrame(right_frame, fg_color="white", border_width=1, corner_radius=8)
     frame_pass.pack(pady=10, padx=20, fill="x")
-    pass_label = ctk.CTkLabel(frame_pass, image=lock_icon, text="")
-    pass_label.pack(side="left", padx=5)
-    entry_password = ctk.CTkEntry(frame_pass, font=("Arial", 12), show="*", border_width=0)
+    ctk.CTkLabel(frame_pass, image=lock_icon, text="").pack(side="left", padx=8)
+    entry_password = ctk.CTkEntry(frame_pass, placeholder_text="Mật khẩu", font=("Arial", 12), show="*", border_width=0)
     entry_password.pack(side="left", fill="x", expand=True, padx=5)
-    entry_password.insert(0, "123456")
 
-    forgot_label = ctk.CTkLabel(right_frame, text="Quên mật khẩu?", text_color="black", cursor="hand2")
-    forgot_label.pack(pady=5)
+    # Forgot password link
+    forgot_label = ctk.CTkLabel(right_frame, text="Quên mật khẩu?", text_color="#3498db", cursor="hand2")
+    forgot_label.pack(pady=4)
     forgot_label.bind("<Button-1>", lambda e: open_forgot_password_window(root))
 
-    btn_login = ctk.CTkButton(right_frame, text="Đăng nhập", font=("Arial", 14, "bold"), fg_color="#FFA500", command=lambda: login(root))
-    btn_login.pack(pady=10, padx=50, fill="x")
+    # Login button
+    btn_login = ctk.CTkButton(right_frame, text="Đăng nhập", font=("Arial", 14, "bold"), fg_color="#2ecc71", hover_color="#27ae60", corner_radius=10, command=lambda: login(root))
+    btn_login.pack(pady=15, padx=40, fill="x")
 
+    # Chèn ảnh minh họa vào khung trái
+    try:
+        illustration_path = currentDir / "img" / "login.png"
+        illustration_img = ctk.CTkImage(light_image=Image.open(illustration_path), size=(200, 200))
+        illustration_label = ctk.CTkLabel(left_frame, image=illustration_img, text="")
+        illustration_label.place(relx=0.5, rely=0.5, anchor="center")
+    except Exception as e:
+        print(f"Lỗi khi tải ảnh minh họa: {e}")
+
+    entry_username.insert(0, "admin")
+    entry_password.insert(0, "123456")
     root.update()
+
 
 if __name__ == "__main__":
     root = ctk.CTk()
