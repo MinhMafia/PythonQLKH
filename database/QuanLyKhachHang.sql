@@ -66,7 +66,7 @@ CREATE TABLE `KHACHHANG` (
     `DIACHI` VARCHAR(255) COMMENT 'Địa chỉ',
     `SDT` VARCHAR(11) UNIQUE NOT NULL COMMENT 'Số điện thoại',
     `EMAIL` VARCHAR(50) UNIQUE COMMENT 'Email',
-    `CCCD` VARCHAR(11) COMMENT 'Số CCCD',
+    `CCCD` VARCHAR(12) COMMENT 'Số CCCD',
     `TIEN` INT(11) COMMENT 'Số tiền của khánh hàng',
     `TT` INT(11) NOT NULL DEFAULT 1 COMMENT 'Trạng thái',
     PRIMARY KEY(MKH)
@@ -141,7 +141,7 @@ VALUES
         ('Huỳnh Khôi Nguyên', 1, '2023-05-06', '0123456789', 'nguyeney111@gmail.com', 2, 1),
         ('Trần Gia Nguyễn', 1, '2004-07-17', '0387913347', 'trangianguyen.com@gmail.com', 3, 1),
         ('Hoàng Gia Bảo', 1, '2003-04-11', '0355374322', 'musicanime2501@gmail.com', 3, 1),
-        (5, 'Nguyễn Trần Nhật Huy', 1, '2005-05-21', '0334607177', 'nguyentrannhathuy2018tqn@gmail.com', 2, 1);
+        ('Nguyễn Trần Nhật Huy', 1, '2005-05-21', '0334607177', 'nguyentrannhathuy2018tqn@gmail.com', 2, 1);
 
 INSERT INTO `CHUCVU` (`TEN`, `MUCLUONG`, `TT`)
 VALUES
@@ -157,23 +157,23 @@ INSERT INTO `TAIKHOAN` (`MNV`, `MK`, `TDN`, `MNQ`, `TT`, `OTP`) VALUES
 INSERT INTO `KHACHHANG` (`HOTEN`, `DIACHI`, `SDT`, `CCCD`, `TIEN`, `TT`, `NGAYTHAMGIA`)
 VALUES
         ('Nguyễn Văn A', 'Gia Đức, Ân Đức, Hoài Ân, Bình Định', '0387913347', '082300100001', 50000000, 1, '2024-04-15 09:52:29'),
-        ('Trần Nhất Nhất', '205 Trần Hưng Đạo, Phường 10, Quận 5, Thành phố Hồ Chí Minh', '0123456789', '082300020002', 40000000, 0, '2024-04-15 09:52:29'),
-        ('Hoàng Gia Bo', 'Khoa Trường, Hoài Ân, Bình Định', '0987654321', '082303000003', 20000000, 0, '2024-04-15 09:52:29'),
-        ('Hồ Minh Hưng', 'Khoa Trường, Hoài Ân, Bình Định', '0867987456', '082300004004', 80000000, 0, '2024-04-15 09:52:29'),
+        ('Trần Nhất Nhất', '205 Trần Hưng Đạo, Phường 10, Quận 5, Thành phố Hồ Chí Minh', '0123456789', '082300020002', 40000000, 2, '2024-04-15 09:52:29'),
+        ('Hoàng Gia Bo', 'Khoa Trường, Hoài Ân, Bình Định', '0987654321', '082303000003', 20000000, 2, '2024-04-15 09:52:29'),
+        ('Hồ Minh Hưng', 'Khoa Trường, Hoài Ân, Bình Định', '0867987456', '082300004004', 80000000, 2, '2024-04-15 09:52:29'),
         ('Nguyễn Thị Minh Anh', '123 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0935123456', '082300050005', 8000000, 1, '2024-04-16 17:59:57'),
-        ('Trần Đức Minh', '789 Đường Lê Hồng Phong, Thành phố Đà Nẵng', '0983456789', '082300060006', 4000000, 0, '2024-04-16 18:08:12'),
-        ('Lê Hải Yến', '456 Tôn Thất Thuyết, Quận 4, Thành phố Hồ Chí Minh', '0977234567', '082370000007', 3000000, 0, '2024-04-16 18:08:47'),
-        ('Phạm Thanh Hằng', '102 Lê Duẩn, Thành phố Hải Phòng', '0965876543', '082300000908', 2000000, 0, '2024-04-16 18:12:59'),
-        ('Hoàng Đức Anh', '321 Lý Thường Kiệt, Thành phố Cần Thơ', '0946789012', '082300800009', 1000000, 0, '2024-04-16 18:13:47'),
+        ('Trần Đức Minh', '789 Đường Lê Hồng Phong, Thành phố Đà Nẵng', '0983456789', '082300060006', 4000000, 2, '2024-04-16 18:08:12'),
+        ('Lê Hải Yến', '456 Tôn Thất Thuyết, Quận 4, Thành phố Hồ Chí Minh', '0977234567', '082370000007', 3000000, 2, '2024-04-16 18:08:47'),
+        ('Phạm Thanh Hằng', '102 Lê Duẩn, Thành phố Hải Phòng', '0965876543', '082300000908', 2000000, 2, '2024-04-16 18:12:59'),
+        ('Hoàng Đức Anh', '321 Lý Thường Kiệt, Thành phố Cần Thơ', '0946789012', '082300800009', 1000000, 2, '2024-04-16 18:13:47'),
         ('Ngô Thanh Tùng', '987 Trần Hưng Đạo, Quận 1, Thành phố Hồ Chí Minh', '0912345678', '082300000010', 10000000, 1, '2024-04-16 18:14:12'),
-        ('Võ Thị Kim Ngân', '555 Nguyễn Văn Linh, Quận Nam Từ Liêm, Hà Nội', '0916789123', '082302000011', 90000000, 0, '2024-04-16 18:15:11'),
-        ('Đỗ Văn Tú', '777 Hùng Vương, Thành phố Huế', '0982345678', '082300030012', 7000000, 0, '2024-04-30 18:15:56'),
-        ('Lý Thanh Trúc', '888 Nguyễn Thái Học, Quận Ba Đình, Hà Nội', '0982123456', '082304000013', 4000000, 0, '2024-04-16 18:16:22'),
-        ('Bùi Văn Hoàng', '222 Đường 2/4, Thành phố Nha Trang', '0933789012', '082300050014', 5000000, 0, '2024-04-16 18:16:53'),
-        ('Lê Văn Thành', '23 Đường 3 Tháng 2, Quận 10, TP. Hồ Chí Minh', '0933456789', '082300600015', 100000000, 0, '2024-04-16 18:17:46'),
-        ('Nguyễn Thị Lan Anh', '456 Lê Lợi, Quận 1, TP. Hà Nội', '0965123456', '082300007016', 40000000,0, '2024-04-16 18:18:10'),
-        ('Phạm Thị Mai', '234 Lê Hồng Phong, Quận 5, TP. Hồ Chí Minh', '0946789013', '082300060017', 60000000, 0, '2024-04-17 18:18:34'),
-        ('Hoàng Văn Nam', ' 567 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0912345679', '082300008018', 70000000, 0, '2024-04-17 18:19:16');
+        ('Võ Thị Kim Ngân', '555 Nguyễn Văn Linh, Quận Nam Từ Liêm, Hà Nội', '0916789123', '082302000011', 90000000, 2, '2024-04-16 18:15:11'),
+        ('Đỗ Văn Tú', '777 Hùng Vương, Thành phố Huế', '0982345678', '082300030012', 7000000, 2, '2024-04-30 18:15:56'),
+        ('Lý Thanh Trúc', '888 Nguyễn Thái Học, Quận Ba Đình, Hà Nội', '0982123456', '082304000013', 4000000, 2, '2024-04-16 18:16:22'),
+        ('Bùi Văn Hoàng', '222 Đường 2/4, Thành phố Nha Trang', '0933789012', '082300050014', 5000000, 2, '2024-04-16 18:16:53'),
+        ('Lê Văn Thành', '23 Đường 3 Tháng 2, Quận 10, TP. Hồ Chí Minh', '0933456789', '082300600015', 100000000, 2, '2024-04-16 18:17:46'),
+        ('Nguyễn Thị Lan Anh', '456 Lê Lợi, Quận 1, TP. Hà Nội', '0965123456', '082300007016', 40000000, 2, '2024-04-16 18:18:10'),
+        ('Phạm Thị Mai', '234 Lê Hồng Phong, Quận 5, TP. Hồ Chí Minh', '0946789013', '082300060017', 60000000, 2, '2024-04-17 18:18:34'),
+        ('Hoàng Văn Nam', ' 567 Phố Huế, Quận Hai Bà Trưng, Hà Nội', '0912345679', '082300008018', 70000000, 2, '2024-04-17 18:19:16');
 
 INSERT INTO `GIAODICH` (`MKH`, `MNV`, `TIEN`, `TT`, `TIENKH`)
 VALUES

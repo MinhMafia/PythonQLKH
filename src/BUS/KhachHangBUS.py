@@ -2,9 +2,13 @@ from DAO.KhachHangDAO import KhachHangDAO
 
 class KhachHangBUS:
     def __init__(self):
-        self.listKhachHang = KhachHangDAO.select_all()
+        self.dao = KhachHangDAO()
+        self.listKhachHang = self.dao.select_all()
+        # print("KhachHangBUS init listKhachHang:", [c.__dict__ for c in self.listKhachHang])  # Log khởi tạo
 
     def get_khach_hang_all(self):
+        self.listKhachHang = self.dao.select_all()  # Làm mới danh sách
+        # print("get_khach_hang_all result:", [c.__dict__ for c in self.listKhachHang])  # Log dữ liệu trả về
         return self.listKhachHang
 
     def get_khach_hang(self, index):
@@ -17,18 +21,30 @@ class KhachHangBUS:
         return -1
 
     def add_khach_hang(self, kh):
-        KhachHangDAO.insert(kh)
+        result = self.dao.insert(kh)
+        if result:
+            self.listKhachHang = self.dao.select_all()  # Làm mới danh sách
+            # print("add_khach_hang updated listKhachHang:", [c.__dict__ for c in self.listKhachHang])  # Log
+        return result
 
     def update_khach_hang(self, kh):
-        # KhachHangDAO.update(kh)
-        dao = KhachHangDAO()  # Tạo instance của KhachHangDAO
-        dao.update(kh)        # Gọi phương thức update thông qua instance
+        result = self.dao.update(kh)
+        if result:
+            self.listKhachHang = self.dao.select_all()  # Làm mới danh sách
+            # print("update_khach_hang updated listKhachHang:", [c.__dict__ for c in self.listKhachHang])  # Log
+        return result
 
     def delete_khach_hang(self, makh):
-        KhachHangDAO.delete(makh)
+        result = self.dao.delete(makh)
+        if result:
+            self.listKhachHang = self.dao.select_all()  # Làm mới danh sách
+            # print("delete_khach_hang updated listKhachHang:", [c.__dict__ for c in self.listKhachHang])  # Log
+        return result
 
     def find_khach_hang_by_cccd(self, cccd):
-        return KhachHangDAO.select_by_cccd(cccd)
+        customer = self.dao.select_by_cccd(cccd)
+        # print("find_khach_hang_by_cccd CCCD=", cccd, "result:", customer.__dict__ if customer else None)  # Log
+        return customer
 
     def search(self, txt, type):
         txt = txt.lower()
@@ -44,11 +60,16 @@ class KhachHangBUS:
         return result
 
     def doi_email(self, makh, new_email):
-        KhachHangDAO.update_email_by_makh(makh, new_email)
+        self.dao.update_email_by_makh(makh, new_email)
+        self.listKhachHang = self.dao.select_all()  # Làm mới danh sách
+        # print("doi_email updated listKhachHang:", [c.__dict__ for c in self.listKhachHang])  # Log
 
     def find_khach_hang_by_ma_khach_hang(self, ma_khach_hang):
-        # return next((kh for kh in self.listKhachHang if kh.MKH == ma_khach_hang), None)
-        return KhachHangDAO.select_by_id(ma_khach_hang) #khởi tạo mới để có dữ liệu mới nhất khi làm gì đó
+        customer = self.dao.select_by_id(ma_khach_hang)
+        # print("find_khach_hang_by_ma_khach_hang MKH=", ma_khach_hang, "result:", customer.__dict__ if customer else None)  # Log
+        return customer
 
     def kt(self, email):
-        return KhachHangDAO.is_account_inactive(email)
+        is_inactive = self.dao.is_account_inactive(email)
+        # print("kt email=", email, "is_inactive:", is_inactive)  # Log
+        return is_inactive

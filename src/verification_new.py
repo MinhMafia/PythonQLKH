@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Dense, Flatten, Input
+from tensorflow.keras.layers import Dense, Flatten, Input, Dropout
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.optimizers import Adam
@@ -12,52 +12,62 @@ import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
-
 from DTO.KhanhHangDTO import KhachHangDTO
-# from config.DatabaseManager import DatabaseManager
 from BUS.KhachHangBUS import KhachHangBUS
 from pathlib import Path 
 from sklearn.model_selection import train_test_split
 
 # Đường dẫn gốc của dự án
 currentDir = Path(__file__).parent
-base_dir = currentDir.parent / "database" 
+base_dir = currentDir.parent / "database"
 
 # Đường dẫn đến các thư mục
 reference_dir = os.path.join(base_dir, "Signatures", "Reference")
 current_dir = os.path.join(base_dir, "Signatures", "Current")
 new_customer_dir = os.path.join(base_dir, "Signatures", "new_customer")
+unknown_dir = os.path.join(base_dir, "Signatures", "unknown")  # Thư mục cho dữ liệu âm
 model_dir = os.path.join(base_dir, "Models")
 os.makedirs(model_dir, exist_ok=True)
-model_path = os.path.join(model_dir, "signature_model.keras")  # Sử dụng định dạng .keras
+os.makedirs(unknown_dir, exist_ok=True)
+model_path = os.path.join(model_dir, "signature_model.keras")
 
 # Định dạng file hình ảnh được hỗ trợ
 image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
 
-# Kết nối với database MySQL
-# db_manager = DatabaseManager()
-# conn = db_manager.get_connection()
-# cursor = conn.cursor(dictionary=True)
+# Hàm tính entropy của dự đoán
+def calculate_entropy(predictions):
+    epsilon = 1e-10  # Tránh log(0)
+    entropy = -np.sum(predictions * np.log(predictions + epsilon))
+    return entropy
 
 # Hàm huấn luyện mô hình VGG16 với tăng cường dữ liệu
 def train_vgg16_model():
-    # Lấy danh sách khách hàng đã kích hoạt
-    # cursor.execute("SELECT MKH FROM KHACHHANG WHERE TT = 1")
-    # active_customers = [str(customer.MKH) for customer in cursor.fetchall()]
-    active_customers = [str(kh.MKH) for kh in KhachHangBUS().get_khach_hang_all() if kh.TT == 1]
+    # Lấy danh sách khách hàng có trạng thái 0 (Bị khóa) hoặc 1 (Hoạt động) và có thư mục chữ ký mẫu
+    all_customers = KhachHangBUS().get_khach_hang_all()
+    eligible_customers = []
+    for kh in all_customers:
+        if kh.TT in [0, 1]:  # Bao gồm cả khách hàng bị khóa và hoạt động
+            customer_dir = os.path.join(reference_dir, str(kh.MKH))
+            if os.path.exists(customer_dir) and any(
+                file.lower().endswith(image_extensions) for file in os.listdir(customer_dir)
+            ):
+                eligible_customers.append(str(kh.MKH))
     
-    if not active_customers:
-        print("Không có khách hàng nào để huấn luyện mô hình.")
-        return None, None, None  # Trả về 3 giá trị None
+    # Thêm lớp "unknown"
+    classes = eligible_customers + ['unknown']
+    
+    if not eligible_customers:
+        print("Không có khách hàng nào đủ điều kiện để huấn luyện mô hình.")
+        return None, None, None
     
     # Chuẩn bị dữ liệu huấn luyện
     X = []
     y = []
-    label_to_index = {str(mkh): idx for idx, mkh in enumerate(active_customers)}
-    index_to_label = {idx: mkh for mkh, idx in label_to_index.items()}
+    label_to_index = {cls: idx for idx, cls in enumerate(classes)}
+    index_to_label = {idx: cls for cls, idx in label_to_index.items()}
     
-    # Tải dữ liệu gốc
-    for mkh in active_customers:
+    # Tải dữ liệu từ khách hàng
+    for mkh in eligible_customers:
         customer_dir = os.path.join(reference_dir, str(mkh))
         for file in os.listdir(customer_dir):
             if file.lower().endswith(image_extensions):
@@ -68,22 +78,37 @@ def train_vgg16_model():
                 X.append(img_array)
                 y.append(label_to_index[str(mkh)])
     
+    # Tải dữ liệu từ lớp "unknown"
+    for file in os.listdir(unknown_dir):
+        if file.lower().endswith(image_extensions):
+            image_path = os.path.join(unknown_dir, file)
+            img = load_img(image_path, target_size=(200, 200))
+            img_array = img_to_array(img)
+            img_array = preprocess_input(img_array)
+            X.append(img_array)
+            y.append(label_to_index['unknown'])
+    
+    if len(X) == 0:
+        print("Không có dữ liệu chữ ký mẫu để huấn luyện mô hình.")
+        return None, None, None
+
     X = np.array(X)
     y = np.array(y)
-    y = tf.keras.utils.to_categorical(y, num_classes=len(active_customers))
+    y = tf.keras.utils.to_categorical(y, num_classes=len(classes))
     
     # Chia dữ liệu thành tập huấn luyện và tập kiểm tra
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     
-    # Tăng cường dữ liệu bằng ImageDataGenerator
+    # Tăng cường dữ liệu mạnh hơn
     datagen = ImageDataGenerator(
-        rotation_range=20,           # Xoay ngẫu nhiên trong khoảng ±20 độ
-        width_shift_range=0.1,      # Dịch chuyển ngang ±10%
-        height_shift_range=0.1,     # Dịch chuyển dọc ±10%
-        brightness_range=[0.8, 1.2],# Thay đổi độ sáng từ 80% đến 120%
-        zoom_range=0.2,             # Thu phóng ±20%
-        horizontal_flip=False,      # Không lật ngang (chữ ký thường có hướng cố định)
-        fill_mode='nearest'         # Điền các khoảng trống bằng giá trị gần nhất
+        rotation_range=30,           # Xoay ngẫu nhiên trong khoảng ±30 độ
+        width_shift_range=0.15,     # Dịch chuyển ngang ±15%
+        height_shift_range=0.15,    # Dịch chuyển dọc ±15%
+        brightness_range=[0.7, 1.3],# Thay đổi độ sáng từ 70% đến 130%
+        zoom_range=0.3,             # Thu phóng ±30%
+        shear_range=0.2,            # Thêm biến dạng cắt
+        horizontal_flip=False,      # Không lật ngang
+        fill_mode='nearest'
     )
     
     # Tạo iterator cho tập huấn luyện
@@ -101,7 +126,8 @@ def train_vgg16_model():
     x = base_model.output
     x = Flatten()(x)
     x = Dense(512, activation='relu')(x)
-    predictions = Dense(len(active_customers), activation='softmax')(x)
+    x = Dropout(0.5)(x)  # Thêm Dropout để giảm overfitting
+    predictions = Dense(len(classes), activation='softmax')(x)
     
     model = Model(inputs=base_model.input, outputs=predictions)
     
@@ -111,26 +137,34 @@ def train_vgg16_model():
     # Huấn luyện mô hình
     model.fit(
         train_generator,
-        epochs=10,
+        epochs=15,  # Tăng số epochs
         steps_per_epoch=len(X_train) // 32,
         validation_data=val_generator,
         validation_steps=len(X_val) // 32,
         verbose=1
     )
     
-    # Lưu mô hình với định dạng .keras
+    # Lưu mô hình
     model.save(model_path)
     print(f"Đã huấn luyện và lưu mô hình tại {model_path}")
     
-    return model, label_to_index, index_to_label  # Trả về 3 giá trị
+    return model, label_to_index, index_to_label
 
 # Tải mô hình và danh sách nhãn
 def load_model_and_labels():
-    # cursor.execute("SELECT MKH FROM KHACHHANG WHERE TT = 1")
-    # active_customers = [str(customer.MKH) for customer in cursor.fetchall()]
-    active_customers = [str(kh.MKH) for kh in KhachHangBUS().get_khach_hang_all() if kh.TT == 1]
-    label_to_index = {str(mkh): idx for idx, mkh in enumerate(active_customers)}
-    index_to_label = {idx: mkh for mkh, idx in label_to_index.items()}
+    all_customers = KhachHangBUS().get_khach_hang_all()
+    eligible_customers = []
+    for kh in all_customers:
+        if kh.TT in [0, 1]:
+            customer_dir = os.path.join(reference_dir, str(kh.MKH))
+            if os.path.exists(customer_dir) and any(
+                file.lower().endswith(image_extensions) for file in os.listdir(customer_dir)
+            ):
+                eligible_customers.append(str(kh.MKH))
+    
+    classes = eligible_customers + ['unknown']
+    label_to_index = {cls: idx for idx, cls in enumerate(classes)}
+    index_to_label = {idx: cls for cls, idx in label_to_index.items()}
     
     if os.path.exists(model_path):
         model = load_model(model_path)
@@ -146,12 +180,9 @@ model, label_to_index, index_to_label = load_model_and_labels()
 
 # Giao diện đồ họa
 class SignatureVerificationApp:
-    # def __init__(self, root):
-    #     self.root = root
     def __init__(self, parent_frame):
         self.root = parent_frame
-        # self.root.title("Hệ thống xác thực chữ ký khách hàng")
-        self.khach_hang_bus = KhachHangBUS()  # Khởi tạo BUS để giao tiếp với DAO
+        self.khach_hang_bus = KhachHangBUS()
 
         # Tab control
         self.tab_control = ttk.Notebook(self.root)
@@ -174,7 +205,6 @@ class SignatureVerificationApp:
         self.selected_customer_id = None
 
     def setup_add_customer_tab(self):
-        # Frame danh sách khách hàng chưa kích hoạt
         frame_list = ttk.LabelFrame(self.tab_add_customer, text="Khách hàng chưa kích hoạt")
         frame_list.pack(padx=10, pady=5, fill="x")
         
@@ -183,10 +213,8 @@ class SignatureVerificationApp:
         self.tree.heading("Name", text="Họ và tên")
         self.tree.pack(fill="x", padx=5, pady=5)
         
-        # Nút làm mới danh sách
         ttk.Button(frame_list, text="Làm mới", command=self.refresh_customer_list).pack(pady=5)
         
-        # Frame thêm chữ ký mẫu
         frame_add = ttk.LabelFrame(self.tab_add_customer, text="Thêm chữ ký mẫu")
         frame_add.pack(padx=10, pady=5, fill="x")
         
@@ -198,18 +226,14 @@ class SignatureVerificationApp:
         
         ttk.Button(frame_add, text="Thêm ảnh chữ ký", command=self.add_signature_images).pack(pady=5)
         
-        # Hiển thị danh sách ảnh đã chọn
         self.image_listbox = tk.Listbox(frame_add, height=5)
         self.image_listbox.pack(fill="x", padx=5, pady=5)
         
-        # Nút lưu trữ
         ttk.Button(frame_add, text="Lưu trữ", command=self.save_signatures).pack(pady=5)
         
-        # Làm mới danh sách khi khởi động
         self.refresh_customer_list()
 
     def setup_verify_tab(self):
-        # Frame xác thực chữ ký
         frame_verify = ttk.LabelFrame(self.tab_verify, text="Xác thực chữ ký khách hàng")
         frame_verify.pack(padx=10, pady=5, fill="x")
         
@@ -220,37 +244,25 @@ class SignatureVerificationApp:
         
         ttk.Button(frame_verify, text="Chọn ảnh chữ ký", command=self.select_signature_to_verify).pack(pady=5)
         
-        # Hiển thị ảnh đã chọn
         self.signature_label = ttk.Label(frame_verify, text="Chưa có ảnh chữ ký được chọn")
         self.signature_label.pack(pady=5)
         
-        # Nút xác nhận
         ttk.Button(frame_verify, text="Xác nhận", command=self.verify_signature).pack(pady=5)
         
-        # Làm mới danh sách khách hàng
         self.refresh_verify_customer_list()
 
     def refresh_customer_list(self):
-        # Xóa danh sách hiện tại
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Lấy danh sách khách hàng chưa kích hoạt
-        # cursor.execute("SELECT MKH, HOTEN FROM KHACHHANG WHERE TT = 0")
-        # inactive_customers = cursor.fetchall()
-        inactive_customers = [kh for kh in self.khach_hang_bus.get_khach_hang_all() if kh.TT == 0]
+        inactive_customers = [kh for kh in self.khach_hang_bus.get_khach_hang_all() if kh.TT == 2]
         
-        # Thêm vào treeview
         for customer in inactive_customers:
             self.tree.insert("", "end", values=(customer.MKH, customer.HOTEN))
         
-        # Cập nhật combobox
         self.customer_dropdown['values'] = [str(customer.MKH) for customer in inactive_customers]
 
     def refresh_verify_customer_list(self):
-        # Lấy danh sách tất cả khách hàng để xác thực
-        # cursor.execute("SELECT MKH FROM KHACHHANG")
-        # all_customers = cursor.fetchall()
         all_customers = self.khach_hang_bus.get_khach_hang_all()
         self.verify_customer_dropdown['values'] = [str(customer.MKH) for customer in all_customers]
 
@@ -265,7 +277,6 @@ class SignatureVerificationApp:
             messagebox.showwarning("Cảnh báo", "Vui lòng chọn khách hàng trước!")
             return
         
-        # Chọn nhiều ảnh
         files = filedialog.askopenfilenames(
             title="Chọn ảnh chữ ký",
             filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")]
@@ -302,25 +313,33 @@ class SignatureVerificationApp:
         reference_customer_path = os.path.join(reference_dir, self.selected_customer_id)
         shutil.move(customer_dir, reference_customer_path)
         
-        # Kích hoạt khách hàng trong database
-        # cursor.execute("UPDATE KHACHHANG SET TT = 1 WHERE MKH = %s", (self.selected_customer_id,))
-        # conn.commit()
-        kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(self.selected_customer_id)
-        if kh:
-            kh.TT = 1
-            self.khach_hang_bus.update_khach_hang(kh)
+        # Tạm thời cập nhật trạng thái khách hàng để huấn luyện
+        kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(self.selected_customer_id))
+        if not kh:
+            messagebox.showerror("Lỗi", f"Không tìm thấy khách hàng với ID: {self.selected_customer_id}")
+            return
+        
+        original_tt = kh.TT  # Lưu trạng thái gốc
+        kh.TT = 1  # Tạm thời đặt TT = 1 để huấn luyện
+        self.khach_hang_bus.update_khach_hang(kh)
         
         # Huấn luyện lại mô hình với dữ liệu mới
         result = train_vgg16_model()
-        if result[0] is None:  # Kiểm tra nếu không có mô hình
-            messagebox.showwarning("Cảnh báo", "Không thể huấn luyện mô hình vì không có khách hàng nào để huấn luyện.")
+        if result[0] is None:
+            # Khôi phục trạng thái nếu huấn luyện thất bại
+            kh.TT = original_tt
+            self.khach_hang_bus.update_khach_hang(kh)
+            messagebox.showwarning("Cảnh báo", "Không thể huấn luyện mô hình vì không có dữ liệu.")
             return
+        
+        # Khôi phục trạng thái gốc sau khi huấn luyện
+        kh.TT = original_tt
+        self.khach_hang_bus.update_khach_hang(kh)
         
         model, label_to_index, index_to_label = result
         
-        messagebox.showinfo("Thành công", f"Đã kích hoạt khách hàng {self.selected_customer_id} với {len(self.selected_images)} chữ ký mẫu.")
+        messagebox.showinfo("Thành công", f"Đã thêm chữ ký mẫu cho khách hàng {self.selected_customer_id} với {len(self.selected_images)} chữ ký mẫu.")
         
-        # Làm mới danh sách
         self.refresh_customer_list()
         self.refresh_verify_customer_list()
         self.selected_images = []
@@ -332,14 +351,12 @@ class SignatureVerificationApp:
             filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")]
         )
         if file:
-            # Sao chép ảnh vào thư mục Current
             dest_path = os.path.join(current_dir, "current_signature.jpg")
             shutil.copy2(file, dest_path)
             self.signature_label.config(text=f"Đã chọn: {os.path.basename(file)}")
             
-            # Hiển thị ảnh
             img = Image.open(file)
-            img = img.resize((150, 150), Image.LANCZOS)
+            img = img.resize((150, 150), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img)
             self.signature_label.config(image=photo, text="")
             self.signature_label.image = photo
@@ -368,16 +385,21 @@ class SignatureVerificationApp:
         # Dự đoán khách hàng
         predictions = model.predict(img_array)
         predicted_label = np.argmax(predictions, axis=1)[0]
-        predicted_mkh = index_to_label[predicted_label]
+        predicted_mkh = index_to_label.get(predicted_label, "Không xác định")
         confidence = predictions[0][predicted_label]
         
-        # Tìm một ảnh mẫu của khách hàng dự đoán
-        predicted_customer_dir = os.path.join(reference_dir, predicted_mkh)
+        # Tính entropy để kiểm tra độ không chắc chắn
+        entropy = calculate_entropy(predictions[0])
+        entropy_threshold = 0.6
+        
+        # Tìm ảnh mẫu của khách hàng dự đoán
+        predicted_customer_dir = os.path.join(reference_dir, predicted_mkh) if predicted_mkh != 'unknown' else unknown_dir
         sample_image_path = None
-        for file in os.listdir(predicted_customer_dir):
-            if file.lower().endswith(image_extensions):
-                sample_image_path = os.path.join(predicted_customer_dir, file)
-                break
+        if os.path.exists(predicted_customer_dir):
+            for file in os.listdir(predicted_customer_dir):
+                if file.lower().endswith(image_extensions):
+                    sample_image_path = os.path.join(predicted_customer_dir, file)
+                    break
         
         # Hiển thị kết quả
         plt.figure(figsize=(10, 5))
@@ -389,37 +411,30 @@ class SignatureVerificationApp:
         if sample_image_path:
             plt.subplot(1, 2, 2)
             plt.imshow(load_img(sample_image_path))
-            plt.title(f"Chữ ký mẫu của MKH: {predicted_mkh}\nConfidence: {confidence:.4f}")
+            plt.title(f"Chữ ký mẫu của {'MKH: ' + predicted_mkh if predicted_mkh != 'unknown' else 'unknown'}\nConfidence: {confidence:.4f}")
             plt.axis('off')
+        
+        # plt.savefig('signature_comparison.png')
+        # plt.close()
         plt.show()
         
         # Xác thực
-        threshold = 0.9
-        # Sau dòng threshold = 0.9
-        if predicted_mkh == customer_id and confidence >= threshold:
+        threshold = 0.8  # Tăng ngưỡng để yêu cầu độ tin cậy cao hơn
+        if predicted_mkh == 'unknown':
+            messagebox.showwarning("Kết quả", f"Chữ ký không khớp với bất kỳ khách hàng nào (unknown).\nConfidence: {confidence:.4f}")
+        elif predicted_mkh == customer_id and confidence >= threshold and entropy < entropy_threshold:
             messagebox.showinfo("Kết quả", f"Success: Chữ ký khớp với khách hàng MKH: {customer_id}\nConfidence: {confidence:.4f}")
             
-            # Cập nhật trạng thái khách hàng thông qua BUS
-            kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(customer_id)
+            kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(customer_id))
             if kh:
-                kh.TT = 1
-                self.khach_hang_bus.update_khach_hang(kh)
-                print(f"Đã cập nhật trạng thái khách hàng {customer_id} thành kích hoạt.")
+                if kh.TT in [0, 2]:
+                    kh.TT = 1
+                    self.khach_hang_bus.update_khach_hang(kh)
+                    status_message = "kích hoạt lại" if kh.TT == 0 else "kích hoạt"
+                    print(f"Đã {status_message} khách hàng {customer_id} thành trạng thái Hoạt động.")
+                else:
+                    print(f"Khách hàng {customer_id} đã ở trạng thái Hoạt động.")
             else:
                 print(f"Không tìm thấy khách hàng với ID: {customer_id}")
         else:
-            messagebox.showwarning("Kết quả", f"Chữ ký không khớp với khách hàng MKH: {customer_id}\nTrùng khớp với MKH: {predicted_mkh}\nConfidence: {confidence:.4f}")
-
-# Chạy ứng dụng
-# if __name__ == "__main__":
-#     root = tk.Tk()
-#     app = SignatureVerificationApp(root)
-#     root.mainloop()
-
-# def load_verification_interface(parent_frame):
-#     # Xóa nội dung cũ trong frame
-#     for widget in parent_frame.winfo_children():
-#         widget.destroy()
-#     app = SignatureVerificationApp(parent_frame)
-# Đóng kết nối database
-# db_manager.close_connection(conn)
+            messagebox.showwarning("Kết quả", f"Chữ ký không khớp với khách hàng MKH: {customer_id}\nTrùng khớp với {'MKH: ' + predicted_mkh if predicted_mkh != 'unknown' else 'unknown'}\nConfidence: {confidence:.4f}")

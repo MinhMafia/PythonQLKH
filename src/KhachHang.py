@@ -1,15 +1,34 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
+import tkinter.messagebox as messagebox
 from BUS.KhachHangBUS import KhachHangBUS
-import component as comp
+from DTO.KhanhHangDTO import KhachHangDTO  # Sửa import
 import re
+from datetime import datetime
+from mysql.connector import Error
 
-CustomerDAO = KhachHangBUS()
+khachHangBUS = KhachHangBUS()
 
 def load_khach_hang():
-    khachHangBUS = KhachHangBUS()
-    return khachHangBUS.get_khach_hang_all()
+    customers = khachHangBUS.get_khach_hang_all()
+    print("load_khach_hang result:", [c.__dict__ for c in customers])  # Log dữ liệu trả về
+    return customers
 
+def check_sdt_exists(sdt, exclude_mkh=None):
+    customers = load_khach_hang()
+    for customer in customers:
+        if customer.SDT == sdt and (exclude_mkh is None or customer.MKH != exclude_mkh):
+            return True
+    return False
+
+def check_email_exists(email, exclude_mkh=None):
+    if not email:
+        return False
+    customers = load_khach_hang()
+    for customer in customers:
+        if customer.EMAIL == email and (exclude_mkh is None or customer.MKH != exclude_mkh):
+            return True
+    return False
 
 def Customer(frame_right):
     customers = load_khach_hang()
@@ -24,20 +43,32 @@ def Customer(frame_right):
         search.delete(0, "end")
 
     def reload_search():
-        search.delete(0, "end")
-        update_table()
+        print("Reloading customer list from database")  # Log để kiểm tra
+        customers.clear()  # Xóa danh sách hiện tại
+        customers.extend(load_khach_hang())  # Tải danh sách mới từ BUS
+        search.delete(0, "end")  # Xóa ô tìm kiếm
+        update_table()  # Cập nhật bảng
+        if not customers:
+            messagebox.showinfo("Thông báo", "Không có khách hàng nào trong cơ sở dữ liệu.")
+        print("Reloaded customers:", [c.__dict__ for c in customers])  # Log danh sách sau khi tải
 
     def update_table(filter_value=None):
         table.delete(*table.get_children())
+        if not customers:
+            customers.extend(load_khach_hang())  # Tải lại nếu danh sách rỗng
         for customer in customers:
             if not filter_value or filter_value in str(customer).lower():
+                status = ("Bị khóa" if customer.TT == 0 else 
+                         "Hoạt động" if customer.TT == 1 else 
+                         "Chưa xác thực")
                 table.insert("", "end", values=(
-                    customer.MKH, customer.HOTEN, customer.SDT, customer.NGAYTHAMGIA))
+                    customer.MKH, customer.HOTEN, customer.SDT, customer.CCCD,
+                    customer.NGAYTHAMGIA, status))
 
-    def open_customer_window(title, disabled_fields=None, prefill_data=None):
+    def open_customer_window(title, mode="detail", prefill_data=None):
         win = ctk.CTkToplevel(frame_right)
         win.title(title)
-        comp.CanGiuaCuaSo(win, 400, 500)
+        win.geometry("400x600")
         win.grab_set()
 
         ctk.CTkLabel(win, text=title, font=("Arial", 24), text_color="#00FA9A").pack(pady=10)
@@ -47,6 +78,7 @@ def Customer(frame_right):
 
         fields = {}
         labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+        mandatory_fields = ["Họ và Tên", "SĐT"]  # Loại CCCD khỏi mandatory khi sửa
 
         for label_text in labels:
             label = ctk.CTkLabel(form_frame, text=f"{label_text}:", font=("Arial", 14))
@@ -54,115 +86,182 @@ def Customer(frame_right):
             entry = ctk.CTkEntry(form_frame, width=300)
             entry.pack(pady=5)
             fields[label_text] = entry
+            if mode == "detail":
+                entry.configure(state="disabled")
+            elif mode == "edit" and label_text == "Mã Căn cước công dân":
+                entry.configure(state="disabled")
 
-        if disabled_fields:
-            for field in disabled_fields:
-                fields[field].configure(state="disabled")
-
+        # Điền dữ liệu vào form
         if prefill_data:
-            fields["Mã Căn cước công dân"].insert(0, prefill_data[0])
-            fields["Họ và Tên"].insert(0, prefill_data[1])
-            fields["SĐT"].insert(0, prefill_data[2])
-            fields["Email"].insert(0, prefill_data[3])
-            fields["Địa chỉ"].insert(0, "Địa chỉ mẫu")
+            print("Prefill data:", prefill_data.__dict__)  # Log dữ liệu prefill_data
+            fields["Mã Căn cước công dân"].insert(0, prefill_data.CCCD or "")
+            fields["Họ và Tên"].insert(0, prefill_data.HOTEN or "")
+            fields["SĐT"].insert(0, prefill_data.SDT or "")
+            fields["Email"].insert(0, prefill_data.EMAIL or "")
+            fields["Địa chỉ"].insert(0, prefill_data.DIACHI or "")
 
         def close_window():
             win.grab_release()
             win.destroy()
 
-        btn_frame = ctk.CTkFrame(win, fg_color="transparent")
-        btn_frame.pack(pady=15)
-
-        ctk.CTkButton(btn_frame, text="Hủy bỏ", fg_color="gray", command=close_window).pack(side="left", padx=10)
-        ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=close_window).pack(side="right", padx=10)
-
-    """Giao diện thêm khách hàng"""
-    
-    def open_addCustomer_window(title):
-        win = ctk.CTkToplevel(frame_right)
-        win.title(title)
-        comp.CanGiuaCuaSo(win, 400, 500)
-        win.grab_set()
-
-        ctk.CTkLabel(win, text=title, font=("Arial", 24), text_color="#00FA9A").pack(pady=10)
-
-        form_frame = ctk.CTkFrame(win, fg_color="transparent")
-        form_frame.pack(pady=10)
-
-        fields = {}
-        labels = ["Họ và Tên", "SĐT", "Email", "Địa chỉ"]
-
-        for label_text in labels:
-            label = ctk.CTkLabel(form_frame, text=f"{label_text}:", font=("Arial", 14))
-            label.pack(pady=5)
-            entry = ctk.CTkEntry(form_frame, width=300)
-            entry.pack(pady=5)
-            fields[label_text] = entry
-
-        def close_window():
-            win.grab_release()
-            win.destroy()
-
-        def add_customer():
-            name = fields["Họ và Tên"].get()
-            phone = fields["SĐT"].get()
-            email = fields["Email"].get()
-            address = fields["Địa chỉ"].get()
-
+        def validate_inputs():
+            # Kiểm tra các trường bắt buộc (trừ CCCD khi sửa)
+            check_fields = mandatory_fields
+            if mode == "add":
+                check_fields = check_fields + ["Mã Căn cước công dân"]
+            for field in check_fields:
+                if not fields[field].get().strip():
+                    messagebox.showerror("Lỗi", f"Vui lòng điền {field}.")
+                    return False
+            phone = fields["SĐT"].get().strip()
             if not re.match(r"^[0-9]{10}$", phone):
-                comp.show_notify(False, "Số điện thoại không hợp lệ.")
-                return
+                messagebox.showerror("Lỗi", "Số điện thoại phải là 10 chữ số.")
+                return False
+            email = fields["Email"].get().strip()
+            if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                messagebox.showerror("Lỗi", "Email không hợp lệ.")
+                return False
+            if mode == "add":  # Chỉ kiểm tra CCCD khi thêm
+                cccd = fields["Mã Căn cước công dân"].get().strip()
+                if not re.match(r"^[0-9]{11}$", cccd):
+                    messagebox.showerror("Lỗi", "CCCD phải là 11 chữ số.")
+                    return False
+            hoten = fields["Họ và Tên"].get().strip()
+            if len(hoten) > 255:
+                messagebox.showerror("Lỗi", "Họ và Tên không được vượt quá 255 ký tự.")
+                return False
+            diachi = fields["Địa chỉ"].get().strip()
+            if diachi and len(diachi) > 255:
+                messagebox.showerror("Lỗi", "Địa chỉ không được vượt quá 255 ký tự.")
+                return False
+            if email and len(email) > 50:
+                messagebox.showerror("Lỗi", "Email không được vượt quá 50 ký tự.")
+                return False
+            # Kiểm tra SDT và Email tồn tại
+            mkh = prefill_data.MKH if prefill_data else None
+            if check_sdt_exists(phone, exclude_mkh=mkh):
+                messagebox.showerror("Lỗi", f"Số điện thoại '{phone}' đã được sử dụng. Vui lòng nhập số khác.")
+                return False
+            if check_email_exists(email, exclude_mkh=mkh):
+                messagebox.showerror("Lỗi", f"Email '{email}' đã được sử dụng. Vui lòng nhập email khác.")
+                return False
+            return True
 
-            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-                comp.show_notify(False, "Email không hợp lệ.")
+        def save_customer():
+            if not validate_inputs():
                 return
-
-            if not name or not phone or not email or not address:
-                comp.show_notify(False, "Vui lòng điền đầy đủ thông tin.")
-                return
-
-            new_customer = {
-                "HOTEN": name,
-                "SDT": phone,
-                "EMAIL": email,
-                "DIACHI": address,
-            }
 
             try:
-                CustomerDAO.add_khach_hang(new_customer)
-                comp.show_notify(True, "Thêm khách hàng thành công!")
-                nonlocal customers
-                customers = load_khach_hang()
-                update_table()
-                close_window()
-            except Exception as e:
-                comp.show_notify(False, f"Không thể thêm khách hàng: {e}")
+                kh_dto = KhachHangDTO(
+                    MKH=prefill_data.MKH if prefill_data else 0,
+                    HOTEN=fields["Họ và Tên"].get().strip(),
+                    NGAYTHAMGIA=(datetime.now().strftime("%Y-%m-%d") if mode == "add" 
+                                else prefill_data.NGAYTHAMGIA),
+                    DIACHI=fields["Địa chỉ"].get().strip() or None,
+                    SDT=fields["SĐT"].get().strip(),
+                    EMAIL=fields["Email"].get().strip() or None,
+                    CCCD=(fields["Mã Căn cước công dân"].get().strip() if mode == "add" 
+                          else prefill_data.CCCD),
+                    TIEN=0 if mode == "add" else (prefill_data.TIEN if prefill_data else 0),
+                    TT=2 if mode == "add" else (prefill_data.TT if prefill_data else 2)
+                )
 
-        # Đây là chỗ tạo nút, cần để dưới cùng
+                if mode == "add":
+                    result = khachHangBUS.add_khach_hang(kh_dto)
+                    if result:
+                        messagebox.showinfo("Thành công", "Thêm khách hàng thành công!")
+                        customers.clear()
+                        customers.extend(load_khach_hang())
+                        update_table()
+                        close_window()
+                    else:
+                        messagebox.showerror("Lỗi", "Không thể thêm khách hàng. Kiểm tra dữ liệu nhập.")
+                elif mode == "edit":
+                    result = khachHangBUS.update_khach_hang(kh_dto)
+                    if result:
+                        messagebox.showinfo("Thành công", "Cập nhật khách hàng thành công!")
+                        customers.clear()
+                        customers.extend(load_khach_hang())
+                        update_table()
+                        close_window()
+                    else:
+                        messagebox.showerror("Lỗi", "Không thể cập nhật khách hàng. Có thể MKH không tồn tại hoặc dữ liệu không hợp lệ.")
+            except Error as e:
+                if "Duplicate entry" in str(e):
+                    if "SDT" in str(e):
+                        messagebox.showerror("Lỗi", f"Số điện thoại '{fields['SĐT'].get().strip()}' đã được sử dụng. Vui lòng nhập số khác.")
+                    elif "EMAIL" in str(e):
+                        messagebox.showerror("Lỗi", f"Email '{fields['Email'].get().strip()}' đã được sử dụng. Vui lòng nhập email khác.")
+                    else:
+                        messagebox.showerror("Lỗi", "Dữ liệu nhập bị trùng. Kiểm tra CCCD, SĐT, hoặc Email.")
+                elif "Data too long" in str(e):
+                    if "CCCD" in str(e):
+                        messagebox.showerror("Lỗi", "CCCD vượt quá độ dài cho phép (11 chữ số).")
+                    elif "HOTEN" in str(e):
+                        messagebox.showerror("Lỗi", "Họ và Tên vượt quá độ dài cho phép (255 ký tự).")
+                    elif "DIACHI" in str(e):
+                        messagebox.showerror("Lỗi", "Địa chỉ vượt quá độ dài cho phép (255 ký tự).")
+                    elif "EMAIL" in str(e):
+                        messagebox.showerror("Lỗi", "Email vượt quá độ dài cho phép (50 ký tự).")
+                    else:
+                        messagebox.showerror("Lỗi", f"Dữ liệu quá dài: {str(e)}")
+                else:
+                    messagebox.showerror("Lỗi", f"Lỗi cơ sở dữ liệu: {str(e)}")
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Lỗi: {str(e)}")
+
         btn_frame = ctk.CTkFrame(win, fg_color="transparent")
         btn_frame.pack(pady=15)
 
+        if mode != "detail":
+            ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=save_customer).pack(side="right", padx=10)
         ctk.CTkButton(btn_frame, text="Hủy bỏ", fg_color="gray", command=close_window).pack(side="left", padx=10)
-        ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=add_customer).pack(side="right", padx=10)
 
+    def open_addCustomer_window():
+        open_customer_window("Thêm khách hàng", mode="add")
 
     def open_selected_customer(mode="detail"):
         selected = table.selection()
         if not selected:
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn một khách hàng.")
             return
 
         data = table.item(selected[0], "values")
-        if mode == "detail":
-            open_customer_window("Chi tiết khách hàng",
-                                 disabled_fields=["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"],
-                                 prefill_data=data)
-        elif mode == "edit":
-            open_customer_window("Sửa thông tin",
-                                 disabled_fields=["Mã Căn cước công dân"],
-                                 prefill_data=data)
+        print("Selected MKH:", data[0])  # Log MKH được chọn
+        try:
+            customer = khachHangBUS.find_khach_hang_by_ma_khach_hang(int(data[0]))
+            print("Customer data:", customer.__dict__ if customer else None)  # Log dữ liệu khách hàng
+            if customer:
+                open_customer_window(f"{'Chi tiết' if mode == 'detail' else 'Sửa'} khách hàng", mode=mode, prefill_data=customer)
+            else:
+                messagebox.showerror("Lỗi", f"Không tìm thấy khách hàng với MKH={data[0]}. Vui lòng thử lại.")
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Lỗi khi lấy dữ liệu khách hàng: {str(e)}")
+
+    def delete_selected_customer():
+        selected = table.selection()
+        if not selected:
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn một khách hàng.")
+            return
+
+        data = table.item(selected[0], "values")
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa khách hàng này?"):
+            try:
+                result = khachHangBUS.delete_khach_hang(int(data[0]))
+                if result:
+                    messagebox.showinfo("Thành công", "Xóa khách hàng thành công!")
+                    customers.clear()
+                    customers.extend(load_khach_hang())
+                    update_table()
+                else:
+                    messagebox.showerror("Lỗi", "Không thể xóa khách hàng. Có thể MKH không tồn tại.")
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Lỗi khi xóa: {str(e)}")
 
     def on_select(event):
-        btnDetail.configure(state="normal")
+        btn_detail.configure(state="normal")
+        btn_edit.configure(state="normal")
+        btn_delete.configure(state="normal")
 
     frame_right.master.title("Quản lý khách hàng")
 
@@ -185,13 +284,15 @@ def Customer(frame_right):
     frame_buttons = ctk.CTkFrame(frame_head, fg_color="transparent")
     frame_buttons.pack(side="right", padx=10, pady=10)
 
-    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=lambda: open_addCustomer_window("Thêm khách hàng")).pack(side="left", padx=10)
-    ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit")).pack(side="left", padx=10)
-    ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80).pack(side="left", padx=10)
-    btnDetail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"))
-    btnDetail.pack(side="left", padx=10)
+    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addCustomer_window).pack(side="left", padx=10)
+    btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit"), state="disabled")
+    btn_edit.pack(side="left", padx=10)
+    btn_delete = ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80, command=delete_selected_customer, state="disabled")
+    btn_delete.pack(side="left", padx=10)
+    btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"), state="disabled")
+    btn_detail.pack(side="left", padx=10)
 
-    columns = ("MKH", "Họ và Tên", "SĐT", "Ngày tham gia")
+    columns = ("MKH", "Họ và Tên", "SĐT", "CCCD", "Ngày tham gia", "Trạng thái")
 
     style = ttk.Style()
     style.configure("Treeview", font=("Arial", 14))
@@ -203,9 +304,11 @@ def Customer(frame_right):
     for col in columns:
         table.heading(col, text=col)
     table.column("MKH", width=50, anchor="center")
-    table.column("Họ và Tên", width=250, anchor="w")
-    table.column("SĐT", width=150, anchor="center")
-    table.column("Ngày tham gia", width=250, anchor="center")
+    table.column("Họ và Tên", width=200, anchor="w")
+    table.column("SĐT", width=120, anchor="center")
+    table.column("CCCD", width=120, anchor="center")
+    table.column("Ngày tham gia", width=150, anchor="center")
+    table.column("Trạng thái", width=120, anchor="center")
 
     scroll = ttk.Scrollbar(frame_body, orient="vertical", command=table.yview)
     table.configure(yscrollcommand=scroll.set)
