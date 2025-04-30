@@ -5,7 +5,8 @@ class NhanVienBUS:
         self.listNhanVien = NhanVienDAO.get_instance().select_all()
 
     def get_nhan_vien_all(self):
-        return NhanVienDAO.get_instance().select_all()
+        self.listNhanVien = NhanVienDAO.get_instance().select_all()
+        return self.listNhanVien
 
     def get_nhan_vien(self, index):
         return self.listNhanVien[index]
