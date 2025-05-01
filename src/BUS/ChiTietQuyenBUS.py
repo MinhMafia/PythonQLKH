@@ -1,42 +1,58 @@
-from DAO.CTQuyenDAO import CTQuyenDAO
-from DTO.CTQuyenDTO import CTQuyenDTO
+from DAO.ChiTietQuyenDAO import ChiTietQuyenDAO
+from DTO.ChiTietQuyenDTO import CTQuyenDTO
 
 class CTQuyenBUS:
     def __init__(self):
-        # Lấy danh sách tất cả các chi tiết quyền từ DAO
-        self.listCTQuyen = CTQuyenDAO.select_all()
+        self.listCTQuyen = ChiTietQuyenDAO.select_all()
 
     def get_ct_quyen_all(self):
-        # Trả về danh sách tất cả chi tiết quyền
         return self.listCTQuyen
 
     def get_ct_quyen(self, index):
-        # Trả về chi tiết quyền theo chỉ số trong danh sách
         return self.listCTQuyen[index]
 
     def get_ct_quyen_by_mnq(self, mnq):
-        # Tìm chi tiết quyền theo Mã nhóm quyền (MNQ)
-        return [ctq for ctq in self.listCTQuyen if ctq.MNQ == mnq]
+        # Lấy trực tiếp từ cơ sở dữ liệu thay vì danh sách
+        result = ChiTietQuyenDAO.select_by_mnq(mnq)
+        print(f"CTQuyen for MNQ {mnq}: {[ctq.__dict__ for ctq in result]}")
+        return result
 
     def get_ct_quyen_by_mcn(self, mcn):
-        # Tìm chi tiết quyền theo Mã chức năng (MCN)
         return [ctq for ctq in self.listCTQuyen if ctq.MCN == mcn]
 
     def add_ct_quyen(self, ctq):
-        # Thêm một chi tiết quyền mới
-        CTQuyenDAO.insert(ctq)
+        print(f"Adding CTQuyenDTO: {ctq.__dict__}")
+        result = ChiTietQuyenDAO.get_instance().insert(ctq)
+        if result:
+            self.listCTQuyen.append(ctq)
+            print(f"Successfully added CTQuyenDTO: {ctq.__dict__}")
+        else:
+            print(f"Failed to add CTQuyenDTO: {ctq.__dict__}")
+        return result
 
-    def update_ct_quyen(self, ctq):
-        # Cập nhật chi tiết quyền
-        dao = CTQuyenDAO()  # Tạo instance của CTQuyenDAO
-        dao.update(ctq)     # Gọi phương thức update thông qua instance
+    def update_ct_quyen(self, old_ctq, new_ctq):
+        result = ChiTietQuyenDAO.get_instance().update(old_ctq, new_ctq)
+        if result:
+            self.listCTQuyen.remove(old_ctq)
+            self.listCTQuyen.append(new_ctq)
+        return result
 
     def delete_ct_quyen(self, mnq, mcn, hanh_dong):
-        # Xóa chi tiết quyền (thực tế là không có trong schema nhưng có thể đánh dấu hoặc xóa)
-        CTQuyenDAO.delete(mnq, mcn, hanh_dong)
+        ctq = ChiTietQuyenDAO.select_by_id(mnq, mcn, hanh_dong)
+        if ctq:
+            result = ChiTietQuyenDAO.get_instance().delete(ctq)
+            if result:
+                self.listCTQuyen.remove(ctq)
+            return result
+        return False
+
+    def delete_all_by_mnq(self, mnq):
+        result = ChiTietQuyenDAO.delete_all_by_mnq(mnq)
+        if result:
+            self.listCTQuyen[:] = [ctq for ctq in self.listCTQuyen if ctq.MNQ != mnq]
+        return result
 
     def search(self, txt, type):
-        # Tìm kiếm chi tiết quyền theo các tiêu chí
         txt = txt.lower()
         result = []
         if type == "Tất cả":
@@ -48,8 +64,3 @@ class CTQuyenBUS:
         elif type == "Hành động":
             result = [ctq for ctq in self.listCTQuyen if txt in ctq.HANHDONG.lower()]
         return result
-
-    def find_ct_quyen_by_mnq_mcn(self, mnq, mcn):
-        # Tìm chi tiết quyền theo Mã nhóm quyền và Mã chức năng
-        return CTQuyenDAO.select_by_mnq_mcn(mnq, mcn)
-

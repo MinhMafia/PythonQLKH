@@ -1,6 +1,7 @@
 from DTO.NhomQuyenDTO import NhomQuyenDTO
 from config.DatabaseManager import DatabaseManager
 from mysql.connector import Error
+from DAO.ChiTietQuyenDAO import ChiTietQuyenDAO
 
 class NhomQuyenDAO:
     @staticmethod
@@ -10,7 +11,7 @@ class NhomQuyenDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor(dictionary=True)
-            query = "SELECT * FROM NHOMQUYEN WHERE TT = 1"  # Chỉ lấy nhóm quyền đang hoạt động
+            query = "SELECT * FROM NHOMQUYEN WHERE TT = 1"
             cursor.execute(query)
             rows = cursor.fetchall()
             for row in rows:
@@ -23,10 +24,12 @@ class NhomQuyenDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Lỗi khi lấy danh sách nhóm quyền: {e}")
+            raise e
         return result
+
     @staticmethod
     def insert(nhom_quyen_dto):
-        """Thêm nhóm quyền mới vào cơ sở dữ liệu"""
+        """Thêm nhóm quyền mới vào cơ sở dữ liệu và trả về MNQ"""
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor()
@@ -34,12 +37,14 @@ class NhomQuyenDAO:
             params = (nhom_quyen_dto.TEN, nhom_quyen_dto.TT)
             cursor.execute(query, params)
             con.commit()
+            mnq = cursor.lastrowid
+            print(f"Inserted NhomQuyen, new MNQ: {mnq}")
             DatabaseManager.close_connection(con)
-            return True
+            return mnq
         except Error as e:
             print(f"Lỗi khi thêm nhóm quyền: {e}")
-            return False
-
+            raise e
+        
     @staticmethod
     def update(nhom_quyen_dto):
         """Cập nhật thông tin nhóm quyền"""
@@ -54,7 +59,7 @@ class NhomQuyenDAO:
             return True
         except Error as e:
             print(f"Lỗi khi cập nhật nhóm quyền: {e}")
-            return False
+            raise e
 
     @staticmethod
     def delete(mnq):
@@ -62,16 +67,19 @@ class NhomQuyenDAO:
         try:
             con = DatabaseManager.get_connection()
             cursor = con.cursor()
+            # Xóa các bản ghi trong CTQUYEN trước
+            query_ct = "DELETE FROM CTQUYEN WHERE MNQ = %s"
+            cursor.execute(query_ct, (mnq,))
+            # Xóa nhóm quyền
             query = "DELETE FROM NHOMQUYEN WHERE MNQ = %s"
-            params = (mnq,)
-            cursor.execute(query, params)
+            cursor.execute(query, (mnq,))
             con.commit()
             DatabaseManager.close_connection(con)
             return True
         except Error as e:
             print(f"Lỗi khi xóa nhóm quyền: {e}")
-            return False
-        
+            raise e
+
     @staticmethod
     def select_by_mnq(mnq):
         """Lấy thông tin nhóm quyền dựa trên mã nhóm quyền"""
@@ -91,4 +99,5 @@ class NhomQuyenDAO:
             DatabaseManager.close_connection(con)
         except Error as e:
             print(f"Lỗi khi lấy nhóm quyền theo MNQ: {e}")
+            raise e
         return result
