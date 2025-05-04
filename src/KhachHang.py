@@ -6,6 +6,7 @@ from DTO.KhachHangDTO import KhachHangDTO  # Sửa import
 import re
 from datetime import datetime
 from mysql.connector import Error
+import component as comp
 
 khachHangBUS = KhachHangBUS()
 
@@ -57,7 +58,11 @@ def Customer(frame_right):
         if not customers:
             customers.extend(load_khach_hang())  # Tải lại nếu danh sách rỗng
         for customer in customers:
-            if not filter_value or filter_value in str(customer).lower():
+            if not filter_value or (
+                filter_value in customer.HOTEN.lower() or 
+                filter_value in customer.SDT.lower() or 
+                filter_value in (customer.CCCD.lower() if customer.CCCD else "")
+            ):
                 status = ("Bị khóa" if customer.TT == 0 else 
                          "Hoạt động" if customer.TT == 1 else 
                          "Chưa xác thực")
@@ -69,6 +74,7 @@ def Customer(frame_right):
         win = ctk.CTkToplevel(frame_right)
         win.title(title)
         win.geometry("400x600")
+        # comp.CanGiuaCuaSo(win, 400, 600)
         win.grab_set()
 
         ctk.CTkLabel(win, text=title, font=("Arial", 24), text_color="#00FA9A").pack(pady=10)
@@ -77,7 +83,16 @@ def Customer(frame_right):
         form_frame.pack(pady=10)
 
         fields = {}
-        labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+        labels = []
+        if(mode == "add"):
+            labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+        elif(mode == "detail"):
+            labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ","Ngày tham gia","Số tiền"]
+            win.geometry("400x700")
+            # comp.CanGiuaCuaSo(win, 400, 700)
+        elif(mode == "edit"):
+            labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+            
         mandatory_fields = ["Họ và Tên", "SĐT"]  # Loại CCCD khỏi mandatory khi sửa
 
         for label_text in labels:
@@ -86,10 +101,11 @@ def Customer(frame_right):
             entry = ctk.CTkEntry(form_frame, width=300)
             entry.pack(pady=5)
             fields[label_text] = entry
+            
             # if mode == "detail":
-            #     entry.configure(state="disabled")
+            #     entry.configure(state="readonly")
             # elif mode == "edit" and label_text == "Mã Căn cước công dân":
-            #     entry.configure(state="disabled")
+            #     entry.configure(state="readonly")
 
         # Điền dữ liệu vào form
         if prefill_data:
@@ -99,13 +115,15 @@ def Customer(frame_right):
             fields["SĐT"].insert(0, prefill_data.SDT or "")
             fields["Email"].insert(0, prefill_data.EMAIL or "")
             fields["Địa chỉ"].insert(0, prefill_data.DIACHI or "")
+            fields["Ngày tham gia"].insert(0, prefill_data.NGAYTHAMGIA or "")
+            fields["Số tiền"].insert(0, prefill_data.TIEN or 0)
+
         # Vô hiệu hóa các entry sau khi điền dữ liệu
-        if mode == "detail":
+        if mode == "detail":    
             for entry in fields.values():
                 entry.configure(state="disabled")
         elif mode == "edit" and "Mã Căn cước công dân" in fields:
             fields["Mã Căn cước công dân"].configure(state="disabled")
-
 
         def close_window():
             win.grab_release()

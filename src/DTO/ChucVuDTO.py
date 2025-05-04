@@ -48,3 +48,6 @@ class ChucVuDTO:
             self.MUCLUONG == other.MUCLUONG and
             self.TT == other.TT
         )
+    
+    def __str__(self):
+        return f"ChucVuDTO(MCV={self.MCV}, TEN={self.TEN}, MUCLUONG={self.MUCLUONG}, TT={self.TT})"

@@ -133,9 +133,77 @@ class Home:
             self.fade_transition(root, lambda: login.main(root), new_geometry="500x250")
 
 
+        def open_account_update_window():
+            def close_window():
+                win.grab_release()
+                win.destroy()
+
+            def update_account():
+                username = entry_username.get().strip()
+                password = entry_password.get().strip()
+                passwordNew = entry_passwordNew.get().strip()
+                confirmNew = entry_confirmNew.get().strip()
+
+        
+                if not password or not passwordNew or not confirmNew:
+                    messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin.")
+                    return
+                
+                if password != self.user.MK:
+                    messagebox.showerror("Lỗi", "Mật khẩu hiện tại không đúng.")
+                    return
+                
+                if confirmNew != passwordNew:
+                    messagebox.showerror("Lỗi", "Mật khẩu không trùng khớp.")
+                    return
+                
+
+        
+                # TODO: Gọi BUS hoặc DAO để cập nhật thông tin (viết sau)
+                messagebox.showinfo("Thành công", "Thông tin tài khoản đã được cập nhật.")
+                win.destroy()
+
+                # Cập nhật lại thông tin tài khoản trong giao diện chính
+            win = ctk.CTkToplevel()
+            win.title("Cập nhật tài khoản")
+            win.geometry("340x420")
+            win.grab_set()
+        
+            ctk.CTkLabel(win, text="Cập nhật thông tin tài khoản", font=("Arial", 20), text_color="#00BFFF").pack(pady=20)
+        
+            form_frame = ctk.CTkFrame(win, fg_color="transparent")
+            form_frame.pack(pady=10)
+        
+            ctk.CTkLabel(form_frame, text="Tên tài khoản:", font=("Arial", 14)).pack(pady=5)
+            entry_username = ctk.CTkEntry(form_frame, width=300)
+            entry_username.insert(0, self.user.TDN)
+            entry_username.configure(state="readonly")
+            entry_username.pack()
+        
+            ctk.CTkLabel(form_frame, text="Nhập mật khẩu hiện tại:", font=("Arial", 14)).pack(pady=5)
+            entry_password = ctk.CTkEntry(form_frame, width=300, show="*")
+            entry_password.pack()
+
+            ctk.CTkLabel(form_frame, text="Nhập mật khẩu mới:", font=("Arial", 14)).pack(pady=5)
+            entry_passwordNew = ctk.CTkEntry(form_frame, width=300, show="*")
+            entry_passwordNew.pack()
+        
+            ctk.CTkLabel(form_frame, text="Nhập lại mật khẩu mới:", font=("Arial", 14)).pack(pady=5)
+            entry_confirmNew = ctk.CTkEntry(form_frame, width=300, show="*")
+            entry_confirmNew.pack()
+
+            btn_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+            btn_frame.pack(pady=15)
+
+            ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=update_account).pack(side="right", padx=10)
+            ctk.CTkButton(btn_frame, text="Hủy bỏ", fg_color="gray", command=close_window).pack(side="left", padx=10)
+        
+        
+
         # Chia frame_left thanh 2
         frame_left_account = ctk.CTkFrame(frame_left, width=250, height=100)
         frame_left_account.pack(fill="x", pady=10)
+        frame_left_account.bind("<Button-1>", lambda e: open_account_update_window())
 
         frame_left_menu = ctk.CTkFrame(frame_left, width=250, height=550)
         frame_left_menu.pack(fill="both", expand=True)
@@ -150,6 +218,7 @@ class Home:
         # label chứa ảnh
         avatar_label = ctk.CTkLabel(frame_left_account, image=avatar_img, text="")
         avatar_label.pack(side="left", pady=10, padx=10)
+        avatar_label.bind("<Button-1>", lambda e: open_account_update_window())
 
         frame_text = ctk.CTkFrame(frame_left_account, fg_color="transparent")
         frame_text.pack(side="left", padx=5)
@@ -157,6 +226,7 @@ class Home:
         # Hiển thị tên đăng nhập
         username_label = ctk.CTkLabel(frame_text, text=f"Tài khoản: {self.user.TDN}", font=("Arial", 12, "bold"))
         username_label.pack(anchor="w")
+        username_label.bind("<Button-1>", lambda e: open_account_update_window())
 
         # Lấy tên nhóm quyền từ BUS
         nhom_quyen_bus = NhomQuyenBUS()
@@ -165,28 +235,29 @@ class Home:
         # Hiển thị vai trò
         role_label = ctk.CTkLabel(frame_text, text=f"Vai trò: {role_name}", font=("Arial", 12, "bold"))
         role_label.pack(anchor="w")
+        role_label.bind("<Button-1>", lambda e: open_account_update_window())
 
 
         # Thêm nút vào khung trái
-        btnHome = ctk.CTkButton(frame_left_menu, text="🏠 Trang chủ", command=lambda: show_frame("Home"))
+        btnHome = ctk.CTkButton(frame_left_menu, text="🏠    Trang chủ    ", command=lambda: show_frame("Home"))
         btnHome.pack(pady=10, padx=20)
 
-        btnVerify = ctk.CTkButton(frame_left_menu, text="Xác Minh", command=lambda: show_frame("Verify"))
+        btnVerify = ctk.CTkButton(frame_left_menu, text="✅   Xác Minh   ", command=lambda: show_frame("Verify"))
         btnVerify.pack(pady=10, padx=20)
 
-        btnCustomer = ctk.CTkButton(frame_left_menu, text="👤 Khách hàng", command=lambda: show_frame("Customer"))
+        btnCustomer = ctk.CTkButton(frame_left_menu, text="👤   Khách hàng   ", command=lambda: show_frame("Customer"))
         btnCustomer.pack(pady=10, padx=20)
 
-        btnStaff = ctk.CTkButton(frame_left_menu, text="Nhân viên", command=lambda: show_frame("Staff"))
+        btnStaff = ctk.CTkButton(frame_left_menu, text="🧑‍💼   Nhân viên", command=lambda: show_frame("Staff"))
         btnStaff.pack(pady=10, padx=20)
 
-        btnAccount = ctk.CTkButton(frame_left_menu, text="Tài khoản", command=lambda: show_frame("Account"))
+        btnAccount = ctk.CTkButton(frame_left_menu, text="🔐  Tài khoản    ", command=lambda: show_frame("Account"))
         btnAccount.pack(pady=10, padx=20)
 
-        btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
+        btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="📬 Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
         btn_TransactionRequest.pack(pady=10, padx=20)
 
-        btn_NhomQuyen = ctk.CTkButton(frame_left_menu, text="Nhóm quyền", command=lambda: show_frame("NhomQuyen"))
+        btn_NhomQuyen = ctk.CTkButton(frame_left_menu, text="🛡️ Nhóm quyền   ", command=lambda: show_frame("NhomQuyen"))
         btn_NhomQuyen.pack(pady=10, padx=20)
 
 

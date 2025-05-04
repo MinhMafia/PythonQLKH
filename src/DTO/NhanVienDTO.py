@@ -80,3 +80,6 @@ class NhanVienDTO:
             self.MCV == other.MCV and
             self.TT == other.TT
         )
+    
+    def __str__(self):
+        return f"MNV: {self.MNV}, HOTEN: {self.HOTEN}, GIOITINH: {self.GIOITINH}, NGAYSINH: {self.NGAYSINH}, SDT: {self.SDT}, EMAIL: {self.EMAIL}, MCV: {self.MCV}, TT: {self.TT}"
