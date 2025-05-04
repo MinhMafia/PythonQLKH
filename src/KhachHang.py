@@ -86,10 +86,10 @@ def Customer(frame_right):
             entry = ctk.CTkEntry(form_frame, width=300)
             entry.pack(pady=5)
             fields[label_text] = entry
-            if mode == "detail":
-                entry.configure(state="disabled")
-            elif mode == "edit" and label_text == "Mã Căn cước công dân":
-                entry.configure(state="disabled")
+            # if mode == "detail":
+            #     entry.configure(state="disabled")
+            # elif mode == "edit" and label_text == "Mã Căn cước công dân":
+            #     entry.configure(state="disabled")
 
         # Điền dữ liệu vào form
         if prefill_data:
@@ -99,6 +99,13 @@ def Customer(frame_right):
             fields["SĐT"].insert(0, prefill_data.SDT or "")
             fields["Email"].insert(0, prefill_data.EMAIL or "")
             fields["Địa chỉ"].insert(0, prefill_data.DIACHI or "")
+        # Vô hiệu hóa các entry sau khi điền dữ liệu
+        if mode == "detail":
+            for entry in fields.values():
+                entry.configure(state="disabled")
+        elif mode == "edit" and "Mã Căn cước công dân" in fields:
+            fields["Mã Căn cước công dân"].configure(state="disabled")
+
 
         def close_window():
             win.grab_release()

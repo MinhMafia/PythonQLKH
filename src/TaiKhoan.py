@@ -46,9 +46,6 @@ def Account(frame_right):
             entry.pack(pady=5)
             fields[label_text] = entry
 
-        if disabled_fields:
-            for field in disabled_fields:
-                fields[field].configure(state="disabled")
 
         if prefill_data:
             fields["Mã nhân viên"].insert(0, prefill_data[0])
@@ -56,6 +53,9 @@ def Account(frame_right):
             fields["Mã nhóm quyền"].insert(0, prefill_data[2])
             fields["Trạng thái"].insert(0, prefill_data[3])
 
+        if disabled_fields:
+            for field in disabled_fields:
+                fields[field].configure(state="disabled")
         def close_window():
             win.grab_release()
             win.destroy()

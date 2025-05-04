@@ -99,21 +99,20 @@ def Staff(frame_right):
             label = ctk.CTkLabel(form_frame, text=f"{label_text}:", font=("Arial", 14))
             label.pack(pady=5)
             if label_text == "Giới tính":
-                entry = ctk.CTkComboBox(form_frame, values=["Nam", "Nữ"], width=300, state="disabled" if mode == "detail" else "normal")
+                entry = ctk.CTkComboBox(form_frame, values=["Nam", "Nữ"], width=300)
             elif label_text == "Chức vụ":
-                entry = ctk.CTkComboBox(form_frame, values=list(CHUC_VU.values()), width=300, state="disabled" if mode == "detail" else "normal")
+                entry = ctk.CTkComboBox(form_frame, values=list(CHUC_VU.values()), width=300)
             elif label_text == "Trạng thái":
                 entry = ctk.CTkComboBox(form_frame, values=list(TRANG_THAI.values()), width=300, state="normal")
             else:
                 entry = ctk.CTkEntry(form_frame, width=300)
-                if mode == "detail":
-                    entry.configure(state="disabled")
+                
             entry.pack(pady=5)
             fields[label_text] = entry
 
         # Điền dữ liệu vào form
         if prefill_data:
-            print("Filling form with prefill_data:", prefill_data.__dict__)  # Log dữ liệu điền
+            # print("Filling form with prefill_data:", prefill_data.__dict__)  # Log dữ liệu điền
             fields["Họ và Tên"].insert(0, prefill_data.HOTEN or "")
             fields["Giới tính"].set("Nam" if prefill_data.GIOITINH == 1 else "Nữ")
             fields["Ngày sinh"].insert(0, str(prefill_data.NGAYSINH) if prefill_data.NGAYSINH else "")
@@ -122,7 +121,16 @@ def Staff(frame_right):
             fields["Chức vụ"].set(CHUC_VU.get(prefill_data.MCV, "Nhân viên giao dịch"))
             if mode == "edit" and "Trạng thái" in fields:
                 fields["Trạng thái"].set(TRANG_THAI.get(prefill_data.TT, "Chưa xác thực"))
-            print("Form fields after filling:", {k: v.get() for k, v in fields.items()})  # Log trạng thái các trường
+            # print("Form fields after filling:", {k: v.get() for k, v in fields.items()})  # Log trạng thái các trường
+
+        # Vô hiệu hóa các entry và combobox sau khi điền dữ liệu
+        if mode == "detail":
+            for entry in fields.values():
+                entry.configure(state="disabled")
+        elif mode == "edit" and "Trạng thái" in fields:
+            for label_text, entry in fields.items():
+                if label_text != "Trạng thái":
+                    entry.configure(state="disabled")
 
         def close_window():
             print("Closing window")  # Log khi đóng cửa sổ
