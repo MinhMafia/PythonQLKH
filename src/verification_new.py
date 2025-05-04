@@ -25,10 +25,8 @@ base_dir = currentDir.parent / "database"
 reference_dir = os.path.join(base_dir, "Signatures", "Reference")
 current_dir = os.path.join(base_dir, "Signatures", "Current")
 new_customer_dir = os.path.join(base_dir, "Signatures", "new_customer")
-unknown_dir = os.path.join(base_dir, "Signatures", "unknown")  # Thư mục cho dữ liệu âm
 model_dir = os.path.join(base_dir, "Models")
 os.makedirs(model_dir, exist_ok=True)
-os.makedirs(unknown_dir, exist_ok=True)
 model_path = os.path.join(model_dir, "signature_model.keras")
 
 # Định dạng file hình ảnh được hỗ trợ
@@ -53,8 +51,7 @@ def train_vgg16_model():
             ):
                 eligible_customers.append(str(kh.MKH))
     
-    # Thêm lớp "unknown"
-    classes = eligible_customers + ['unknown']
+    classes = eligible_customers  
     
     if not eligible_customers:
         print("Không có khách hàng nào đủ điều kiện để huấn luyện mô hình.")
@@ -77,16 +74,6 @@ def train_vgg16_model():
                 img_array = preprocess_input(img_array)
                 X.append(img_array)
                 y.append(label_to_index[str(mkh)])
-    
-    # Tải dữ liệu từ lớp "unknown"
-    for file in os.listdir(unknown_dir):
-        if file.lower().endswith(image_extensions):
-            image_path = os.path.join(unknown_dir, file)
-            img = load_img(image_path, target_size=(200, 200))
-            img_array = img_to_array(img)
-            img_array = preprocess_input(img_array)
-            X.append(img_array)
-            y.append(label_to_index['unknown'])
     
     if len(X) == 0:
         print("Không có dữ liệu chữ ký mẫu để huấn luyện mô hình.")
@@ -112,11 +99,12 @@ def train_vgg16_model():
     )
     
     # Tạo iterator cho tập huấn luyện
-    train_generator = datagen.flow(X_train, y_train, batch_size=32)
+    batch_size = 16  # Giảm batch_size để phù hợp với dữ liệu nhỏ
+    train_generator = datagen.flow(X_train, y_train, batch_size=batch_size)
     
     # Không tăng cường dữ liệu cho tập kiểm tra
     val_datagen = ImageDataGenerator()
-    val_generator = val_datagen.flow(X_val, y_val, batch_size=32)
+    val_generator = val_datagen.flow(X_val, y_val, batch_size=batch_size)
     
     # Xây dựng mô hình VGG16
     base_model = VGG16(weights='imagenet', include_top=False, input_shape=(200, 200, 3))
@@ -134,13 +122,17 @@ def train_vgg16_model():
     # Biên dịch mô hình
     model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
     
+    # Đảm bảo steps_per_epoch và validation_steps không bằng 0
+    steps_per_epoch = max(1, len(X_train) // batch_size)
+    validation_steps = max(1, len(X_val) // batch_size)
+    
     # Huấn luyện mô hình
     model.fit(
         train_generator,
-        epochs=15,  # Tăng số epochs
-        steps_per_epoch=len(X_train) // 32,
+        epochs=15,
+        steps_per_epoch=steps_per_epoch,
         validation_data=val_generator,
-        validation_steps=len(X_val) // 32,
+        validation_steps=validation_steps,
         verbose=1
     )
     
@@ -162,7 +154,7 @@ def load_model_and_labels():
             ):
                 eligible_customers.append(str(kh.MKH))
     
-    classes = eligible_customers + ['unknown']
+    classes = eligible_customers  # Không có lớp "unknown"
     label_to_index = {cls: idx for idx, cls in enumerate(classes)}
     index_to_label = {idx: cls for cls, idx in label_to_index.items()}
     
@@ -184,6 +176,10 @@ class SignatureVerificationApp:
         self.root = parent_frame
         self.khach_hang_bus = KhachHangBUS()
 
+        # Font chữ cơ bản
+        self.base_font = ("Arial", 12)
+        self.bold_font = ("Arial", 12, "bold")
+
         # Tab control
         self.tab_control = ttk.Notebook(self.root)
         
@@ -195,61 +191,240 @@ class SignatureVerificationApp:
         self.tab_verify = ttk.Frame(self.tab_control)
         self.tab_control.add(self.tab_verify, text="Xác thực chữ ký")
         
-        self.tab_control.pack(expand=1, fill="both")
+        self.tab_control.pack(expand=1, fill="both", padx=10, pady=10)
         
         self.setup_add_customer_tab()
         self.setup_verify_tab()
         
-        # Danh sách ảnh tạm thời cho khách hàng mới
+        # Danh sách ảnh tạm thời cho khách hàng mới và biến theo dõi cửa sổ
         self.selected_images = []
         self.selected_customer_id = None
+        self.add_customer_window = None  # Biến theo dõi cửa sổ chọn khách hàng ở tab "Thêm chữ ký mẫu"
+        self.verify_customer_window = None  # Biến theo dõi cửa sổ chọn khách hàng ở tab "Xác thực chữ ký"
 
     def setup_add_customer_tab(self):
-        frame_list = ttk.LabelFrame(self.tab_add_customer, text="Khách hàng chưa kích hoạt")
-        frame_list.pack(padx=10, pady=5, fill="x")
-        
-        self.tree = ttk.Treeview(frame_list, columns=("ID", "Name"), show="headings")
-        self.tree.heading("ID", text="Mã khách hàng")
+        # Phần trên: Danh sách khách hàng chưa kích hoạt
+        frame_list = ttk.LabelFrame(self.tab_add_customer, text="Danh sách khách hàng chưa kích hoạt", padding=10)
+        frame_list.pack(fill="both", expand=True, padx=5, pady=5)
+
+        columns = ("MKH", "CCCD", "Name")
+        self.tree = ttk.Treeview(frame_list, columns=columns, show="headings", height=8)
+        self.tree.heading("MKH", text="Mã khách hàng")
+        self.tree.heading("CCCD", text="Số CCCD")
         self.tree.heading("Name", text="Họ và tên")
-        self.tree.pack(fill="x", padx=5, pady=5)
-        
-        ttk.Button(frame_list, text="Làm mới", command=self.refresh_customer_list).pack(pady=5)
-        
-        frame_add = ttk.LabelFrame(self.tab_add_customer, text="Thêm chữ ký mẫu")
-        frame_add.pack(padx=10, pady=5, fill="x")
-        
-        ttk.Label(frame_add, text="Chọn khách hàng:").pack(anchor="w", padx=5)
-        self.customer_var = tk.StringVar()
-        self.customer_dropdown = ttk.Combobox(frame_add, textvariable=self.customer_var, state="readonly")
-        self.customer_dropdown.pack(fill="x", padx=5, pady=2)
-        self.customer_dropdown.bind("<<ComboboxSelected>>", self.on_customer_select)
-        
-        ttk.Button(frame_add, text="Thêm ảnh chữ ký", command=self.add_signature_images).pack(pady=5)
-        
-        self.image_listbox = tk.Listbox(frame_add, height=5)
+        self.tree.column("MKH", width=100, anchor="center")
+        self.tree.column("CCCD", width=150, anchor="center")
+        self.tree.column("Name", width=200, anchor="w")
+        self.tree.pack(fill="both", expand=True, padx=5, pady=5)
+
+        ttk.Button(frame_list, text="Làm mới danh sách", command=self.refresh_customer_list).pack(pady=5)
+
+        # Phần dưới: Thêm chữ ký mẫu
+        frame_add = ttk.LabelFrame(self.tab_add_customer, text="Thêm chữ ký mẫu", padding=10)
+        frame_add.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Chọn khách hàng (Entry + Button)
+        customer_frame = ttk.Frame(frame_add)
+        customer_frame.pack(fill="x", padx=5, pady=5)
+
+        ttk.Label(customer_frame, text="Tên khách hàng:", font=self.bold_font).pack(side="left", padx=(0, 5))
+        self.customer_name_entry = ttk.Entry(customer_frame, font=self.base_font, width=30)
+        self.customer_name_entry.insert(0, "Chọn khách hàng")
+        self.customer_name_entry.configure(state="readonly")
+        self.customer_name_entry.pack(side="left", padx=(0, 5))
+
+        def show_customer_list():
+            # Chỉ cho phép mở một cửa sổ duy nhất
+            if self.add_customer_window is not None and self.add_customer_window.winfo_exists():
+                self.add_customer_window.lift()
+                return
+
+            self.add_customer_window = tk.Toplevel(self.root)
+            self.add_customer_window.title("Chọn khách hàng")
+            self.add_customer_window.geometry("600x400")
+            self.add_customer_window.grab_set()
+
+            self.add_customer_window.protocol("WM_DELETE_WINDOW", lambda: on_customer_window_close())
+
+            def on_customer_window_close():
+                self.add_customer_window.grab_release()
+                self.add_customer_window.destroy()
+                self.add_customer_window = None
+
+            # Tìm kiếm khách hàng
+            search_frame = ttk.Frame(self.add_customer_window)
+            search_frame.pack(fill="x", padx=5, pady=5)
+            ttk.Label(search_frame, text="Tìm theo CCCD:", font=self.base_font).pack(side="left")
+            search_entry = ttk.Entry(search_frame, font=self.base_font)
+            search_entry.pack(side="left", padx=5, fill="x", expand=True)
+
+            # Bảng khách hàng
+            columns = ("MKH", "CCCD", "Name")
+            tree = ttk.Treeview(self.add_customer_window, columns=columns, show="headings", height=10)
+            tree.heading("MKH", text="Mã khách hàng")
+            tree.heading("CCCD", text="Số CCCD")
+            tree.heading("Name", text="Họ và tên")
+            tree.column("MKH", width=100, anchor="center")
+            tree.column("CCCD", width=150, anchor="center")
+            tree.column("Name", width=200, anchor="w")
+            tree.pack(fill="both", expand=True, padx=5, pady=5)
+
+            item_to_mkh = {}
+
+            def populate_list(search_text=""):
+                for item in tree.get_children():
+                    tree.delete(item)
+                item_to_mkh.clear()
+                for customer in self.khach_hang_bus.get_khach_hang_all():
+                    if customer.TT == 2 and (search_text.lower() in customer.CCCD.lower()):
+                        item_id = tree.insert("", "end", values=(customer.MKH, customer.CCCD, customer.HOTEN))
+                        item_to_mkh[item_id] = customer.MKH
+
+            populate_list()
+
+            def search_customers(event=None):
+                populate_list(search_entry.get())
+
+            search_entry.bind("<KeyRelease>", search_customers)
+
+            def select_customer():
+                selected_item = tree.selection()
+                if not selected_item:
+                    messagebox.showerror("Lỗi", "Vui lòng chọn một khách hàng!")
+                    return
+                item_id = selected_item[0]
+                mkh = item_to_mkh.get(item_id)
+                customer = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(mkh))
+                if customer:
+                    self.selected_customer_id = str(customer.MKH)
+                    self.customer_name_entry.configure(state="normal")
+                    self.customer_name_entry.delete(0, "end")
+                    self.customer_name_entry.insert(0, customer.HOTEN)
+                    self.customer_name_entry.configure(state="readonly")
+                    self.selected_images = []
+                    self.image_listbox.delete(0, tk.END)
+                    messagebox.showinfo("Thông báo", f"Đã chọn khách hàng {self.selected_customer_id}. Vui lòng thêm ít nhất 3 ảnh chữ ký mẫu.")
+                    on_customer_window_close()
+
+            ttk.Button(self.add_customer_window, text="Chọn", command=select_customer).pack(pady=10)
+
+        ttk.Button(customer_frame, text="...", width=5, command=show_customer_list).pack(side="left")
+
+        # Danh sách ảnh chữ ký
+        ttk.Label(frame_add, text="Ảnh chữ ký đã chọn:", font=self.bold_font).pack(anchor="w", padx=5, pady=5)
+        self.image_listbox = tk.Listbox(frame_add, height=5, font=self.base_font)
         self.image_listbox.pack(fill="x", padx=5, pady=5)
-        
-        ttk.Button(frame_add, text="Lưu trữ", command=self.save_signatures).pack(pady=5)
-        
+
+        # Nút thêm ảnh và lưu trữ
+        button_frame = ttk.Frame(frame_add)
+        button_frame.pack(fill="x", pady=5)
+        ttk.Button(button_frame, text="Thêm ảnh chữ ký", command=self.add_signature_images).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Lưu trữ", command=self.save_signatures).pack(side="right", padx=5)
+
         self.refresh_customer_list()
 
     def setup_verify_tab(self):
-        frame_verify = ttk.LabelFrame(self.tab_verify, text="Xác thực chữ ký khách hàng")
-        frame_verify.pack(padx=10, pady=5, fill="x")
-        
-        ttk.Label(frame_verify, text="Chọn khách hàng:").pack(anchor="w", padx=5)
-        self.verify_customer_var = tk.StringVar()
-        self.verify_customer_dropdown = ttk.Combobox(frame_verify, textvariable=self.verify_customer_var, state="readonly")
-        self.verify_customer_dropdown.pack(fill="x", padx=5, pady=2)
-        
-        ttk.Button(frame_verify, text="Chọn ảnh chữ ký", command=self.select_signature_to_verify).pack(pady=5)
-        
-        self.signature_label = ttk.Label(frame_verify, text="Chưa có ảnh chữ ký được chọn")
-        self.signature_label.pack(pady=5)
-        
-        ttk.Button(frame_verify, text="Xác nhận", command=self.verify_signature).pack(pady=5)
-        
-        self.refresh_verify_customer_list()
+        frame_verify = ttk.LabelFrame(self.tab_verify, text="Xác thực chữ ký khách hàng", padding=10)
+        frame_verify.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Chọn khách hàng (Entry + Button)
+        customer_frame = ttk.Frame(frame_verify)
+        customer_frame.pack(fill="x", padx=5, pady=5)
+
+        ttk.Label(customer_frame, text="Tên khách hàng:", font=self.bold_font).pack(side="left", padx=(0, 5))
+        self.verify_customer_name_entry = ttk.Entry(customer_frame, font=self.base_font, width=30)
+        self.verify_customer_name_entry.insert(0, "Chọn khách hàng")
+        self.verify_customer_name_entry.configure(state="readonly")
+        self.verify_customer_name_entry.pack(side="left", padx=(0, 5))
+
+        def show_verify_customer_list():
+            # Chỉ cho phép mở một cửa sổ duy nhất
+            if self.verify_customer_window is not None and self.verify_customer_window.winfo_exists():
+                self.verify_customer_window.lift()
+                return
+
+            self.verify_customer_window = tk.Toplevel(self.root)
+            self.verify_customer_window.title("Chọn khách hàng")
+            self.verify_customer_window.geometry("600x400")
+            self.verify_customer_window.grab_set()
+
+            self.verify_customer_window.protocol("WM_DELETE_WINDOW", lambda: on_verify_customer_window_close())
+
+            def on_verify_customer_window_close():
+                self.verify_customer_window.grab_release()
+                self.verify_customer_window.destroy()
+                self.verify_customer_window = None
+
+            # Tìm kiếm khách hàng
+            search_frame = ttk.Frame(self.verify_customer_window)
+            search_frame.pack(fill="x", padx=5, pady=5)
+            ttk.Label(search_frame, text="Tìm theo CCCD:", font=self.base_font).pack(side="left")
+            search_entry = ttk.Entry(search_frame, font=self.base_font)
+            search_entry.pack(side="left", padx=5, fill="x", expand=True)
+
+            # Bảng khách hàng
+            columns = ("MKH","CCCD", "Name", "Status")
+            tree = ttk.Treeview(self.verify_customer_window, columns=columns, show="headings", height=10)
+            tree.heading("MKH", text="Mã KH")
+            tree.heading("CCCD", text="Số CCCD")
+            tree.heading("Name", text="Họ và tên")
+            tree.heading("Status", text="Trạng thái")
+            tree.column("MKH", width=150, anchor="center")
+            tree.column("CCCD", width=150, anchor="center")
+            tree.column("Name", width=200, anchor="w")
+            tree.column("Status", width=100, anchor="center")
+            tree.pack(fill="both", expand=True, padx=5, pady=5)
+
+            item_to_mkh = {}
+
+            def populate_list(search_text=""):
+                for item in tree.get_children():
+                    tree.delete(item)
+                item_to_mkh.clear()
+                for customer in self.khach_hang_bus.get_khach_hang_all():
+                    if search_text.lower() in customer.CCCD.lower():
+                        status = "Hoạt động" if customer.TT == 1 else "Bị khóa" if customer.TT == 0 else "Chưa kích hoạt"
+                        item_id = tree.insert("", "end", values=(customer.MKH, customer.CCCD, customer.HOTEN, status))
+                        item_to_mkh[item_id] = customer.MKH
+
+            populate_list()
+
+            def search_customers(event=None):
+                populate_list(search_entry.get())
+
+            search_entry.bind("<KeyRelease>", search_customers)
+
+            def select_customer():
+                selected_item = tree.selection()
+                if not selected_item:
+                    messagebox.showerror("Lỗi", "Vui lòng chọn một khách hàng!")
+                    return
+                item_id = selected_item[0]
+                mkh = item_to_mkh.get(item_id)
+                customer = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(mkh))
+                if customer:
+                    self.verify_customer_id = str(customer.MKH)
+                    self.verify_customer_name_entry.configure(state="normal")
+                    self.verify_customer_name_entry.delete(0, "end")
+                    self.verify_customer_name_entry.insert(0, customer.HOTEN)
+                    self.verify_customer_name_entry.configure(state="readonly")
+                    on_verify_customer_window_close()
+
+            ttk.Button(self.verify_customer_window, text="Chọn", command=select_customer).pack(pady=10)
+
+        ttk.Button(customer_frame, text="...", width=5, command=show_verify_customer_list).pack(side="left")
+
+        # Chọn và hiển thị ảnh chữ ký
+        ttk.Label(frame_verify, text="Ảnh chữ ký:", font=self.bold_font).pack(anchor="w", padx=5, pady=5)
+        self.signature_label = ttk.Label(frame_verify, text="Chưa có ảnh chữ ký được chọn", font=self.base_font)
+        self.signature_label.pack(fill="x", padx=5, pady=5)
+
+        button_frame = ttk.Frame(frame_verify)
+        button_frame.pack(fill="x", pady=5)
+        ttk.Button(button_frame, text="Chọn ảnh chữ ký", command=self.select_signature_to_verify).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Xác nhận", command=self.verify_signature).pack(side="right", padx=5)
+
+        self.verify_customer_id = None
 
     def refresh_customer_list(self):
         for item in self.tree.get_children():
@@ -258,19 +433,11 @@ class SignatureVerificationApp:
         inactive_customers = [kh for kh in self.khach_hang_bus.get_khach_hang_all() if kh.TT == 2]
         
         for customer in inactive_customers:
-            self.tree.insert("", "end", values=(customer.MKH, customer.HOTEN))
-        
-        self.customer_dropdown['values'] = [str(customer.MKH) for customer in inactive_customers]
+            self.tree.insert("", "end", values=(customer.MKH, customer.CCCD, customer.HOTEN))
 
     def refresh_verify_customer_list(self):
-        all_customers = self.khach_hang_bus.get_khach_hang_all()
-        self.verify_customer_dropdown['values'] = [str(customer.MKH) for customer in all_customers]
-
-    def on_customer_select(self, event):
-        self.selected_customer_id = self.customer_var.get()
-        self.selected_images = []
-        self.image_listbox.delete(0, tk.END)
-        messagebox.showinfo("Thông báo", f"Đã chọn khách hàng {self.selected_customer_id}. Vui lòng thêm ít nhất 3 ảnh chữ ký mẫu.")
+        # Không cần thiết vì đã sử dụng cửa sổ chọn khách hàng
+        pass
 
     def add_signature_images(self):
         if not self.selected_customer_id:
@@ -300,39 +467,32 @@ class SignatureVerificationApp:
             messagebox.showwarning("Cảnh báo", f"Chưa đủ chữ ký mẫu. Cần ít nhất 3 ảnh, hiện có: {len(self.selected_images)}")
             return
         
-        # Tạo thư mục cho khách hàng mới trong new_customer
         customer_dir = os.path.join(new_customer_dir, self.selected_customer_id)
         os.makedirs(customer_dir, exist_ok=True)
         
-        # Sao chép ảnh vào thư mục new_customer
         for img_path in self.selected_images:
             dest_path = os.path.join(customer_dir, os.path.basename(img_path))
             shutil.copy2(img_path, dest_path)
         
-        # Di chuyển thư mục vào Reference
         reference_customer_path = os.path.join(reference_dir, self.selected_customer_id)
         shutil.move(customer_dir, reference_customer_path)
         
-        # Tạm thời cập nhật trạng thái khách hàng để huấn luyện
         kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(self.selected_customer_id))
         if not kh:
             messagebox.showerror("Lỗi", f"Không tìm thấy khách hàng với ID: {self.selected_customer_id}")
             return
         
-        original_tt = kh.TT  # Lưu trạng thái gốc
-        kh.TT = 1  # Tạm thời đặt TT = 1 để huấn luyện
+        original_tt = kh.TT
+        kh.TT = 1
         self.khach_hang_bus.update_khach_hang(kh)
         
-        # Huấn luyện lại mô hình với dữ liệu mới
         result = train_vgg16_model()
         if result[0] is None:
-            # Khôi phục trạng thái nếu huấn luyện thất bại
             kh.TT = original_tt
             self.khach_hang_bus.update_khach_hang(kh)
             messagebox.showwarning("Cảnh báo", "Không thể huấn luyện mô hình vì không có dữ liệu.")
             return
         
-        # Khôi phục trạng thái gốc sau khi huấn luyện
         kh.TT = original_tt
         self.khach_hang_bus.update_khach_hang(kh)
         
@@ -340,10 +500,14 @@ class SignatureVerificationApp:
         
         messagebox.showinfo("Thành công", f"Đã thêm chữ ký mẫu cho khách hàng {self.selected_customer_id} với {len(self.selected_images)} chữ ký mẫu.")
         
-        self.refresh_customer_list()
-        self.refresh_verify_customer_list()
+        self.selected_customer_id = None
+        self.customer_name_entry.configure(state="normal")
+        self.customer_name_entry.delete(0, "end")
+        self.customer_name_entry.insert(0, "Chọn khách hàng")
+        self.customer_name_entry.configure(state="readonly")
         self.selected_images = []
         self.image_listbox.delete(0, tk.END)
+        self.refresh_customer_list()
 
     def select_signature_to_verify(self):
         file = filedialog.askopenfilename(
@@ -362,8 +526,7 @@ class SignatureVerificationApp:
             self.signature_label.image = photo
 
     def verify_signature(self):
-        customer_id = self.verify_customer_var.get()
-        if not customer_id:
+        if not self.verify_customer_id:
             messagebox.showwarning("Cảnh báo", "Vui lòng chọn khách hàng!")
             return
         
@@ -376,24 +539,20 @@ class SignatureVerificationApp:
             messagebox.showerror("Lỗi", "Không có mô hình để xác thực. Vui lòng huấn luyện mô hình trước.")
             return
         
-        # Chuẩn bị ảnh chữ ký hiện tại
         img = load_img(current_signature_path, target_size=(200, 200))
         img_array = img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = preprocess_input(img_array)
         
-        # Dự đoán khách hàng
         predictions = model.predict(img_array)
         predicted_label = np.argmax(predictions, axis=1)[0]
         predicted_mkh = index_to_label.get(predicted_label, "Không xác định")
         confidence = predictions[0][predicted_label]
         
-        # Tính entropy để kiểm tra độ không chắc chắn
         entropy = calculate_entropy(predictions[0])
         entropy_threshold = 0.6
         
-        # Tìm ảnh mẫu của khách hàng dự đoán
-        predicted_customer_dir = os.path.join(reference_dir, predicted_mkh) if predicted_mkh != 'unknown' else unknown_dir
+        predicted_customer_dir = os.path.join(reference_dir, predicted_mkh)
         sample_image_path = None
         if os.path.exists(predicted_customer_dir):
             for file in os.listdir(predicted_customer_dir):
@@ -401,7 +560,6 @@ class SignatureVerificationApp:
                     sample_image_path = os.path.join(predicted_customer_dir, file)
                     break
         
-        # Hiển thị kết quả
         plt.figure(figsize=(10, 5))
         plt.subplot(1, 2, 1)
         plt.imshow(load_img(current_signature_path))
@@ -411,30 +569,35 @@ class SignatureVerificationApp:
         if sample_image_path:
             plt.subplot(1, 2, 2)
             plt.imshow(load_img(sample_image_path))
-            plt.title(f"Chữ ký mẫu của {'MKH: ' + predicted_mkh if predicted_mkh != 'unknown' else 'unknown'}\nConfidence: {confidence:.4f}")
+            plt.title(f"Chữ ký mẫu của MKH: {predicted_mkh}\nConfidence: {confidence:.4f}")
             plt.axis('off')
         
-        # plt.savefig('signature_comparison.png')
-        # plt.close()
         plt.show()
         
-        # Xác thực
-        threshold = 0.8  # Tăng ngưỡng để yêu cầu độ tin cậy cao hơn
-        if predicted_mkh == 'unknown':
-            messagebox.showwarning("Kết quả", f"Chữ ký không khớp với bất kỳ khách hàng nào (unknown).\nConfidence: {confidence:.4f}")
-        elif predicted_mkh == customer_id and confidence >= threshold and entropy < entropy_threshold:
-            messagebox.showinfo("Kết quả", f"Success: Chữ ký khớp với khách hàng MKH: {customer_id}\nConfidence: {confidence:.4f}")
+        threshold = 0.8
+        if confidence < threshold or entropy > entropy_threshold:
+            messagebox.showwarning("Kết quả", f"Chữ ký không đủ độ tin cậy để xác thực.\nConfidence: {confidence:.4f}\nEntropy: {entropy:.4f}")
+        elif predicted_mkh == self.verify_customer_id:
+            messagebox.showinfo("Kết quả", f"Success: Chữ ký khớp với khách hàng MKH: {self.verify_customer_id}\nConfidence: {confidence:.4f}")
             
-            kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(customer_id))
+            kh = self.khach_hang_bus.find_khach_hang_by_ma_khach_hang(int(self.verify_customer_id))
             if kh:
                 if kh.TT in [0, 2]:
                     kh.TT = 1
                     self.khach_hang_bus.update_khach_hang(kh)
                     status_message = "kích hoạt lại" if kh.TT == 0 else "kích hoạt"
-                    print(f"Đã {status_message} khách hàng {customer_id} thành trạng thái Hoạt động.")
+                    print(f"Đã {status_message} khách hàng {self.verify_customer_id} thành trạng thái Hoạt động.")
                 else:
-                    print(f"Khách hàng {customer_id} đã ở trạng thái Hoạt động.")
+                    print(f"Khách hàng {self.verify_customer_id} đã ở trạng thái Hoạt động.")
             else:
-                print(f"Không tìm thấy khách hàng với ID: {customer_id}")
+                print(f"Không tìm thấy khách hàng với ID: {self.verify_customer_id}")
         else:
-            messagebox.showwarning("Kết quả", f"Chữ ký không khớp với khách hàng MKH: {customer_id}\nTrùng khớp với {'MKH: ' + predicted_mkh if predicted_mkh != 'unknown' else 'unknown'}\nConfidence: {confidence:.4f}")
+            messagebox.showwarning("Kết quả", f"Chữ ký không khớp với khách hàng MKH: {self.verify_customer_id}\nTrùng khớp với MKH: {predicted_mkh}\nConfidence: {confidence:.4f}")
+        
+        # Reset sau khi xác thực
+        self.verify_customer_id = None
+        self.verify_customer_name_entry.configure(state="normal")
+        self.verify_customer_name_entry.delete(0, "end")
+        self.verify_customer_name_entry.insert(0, "Chọn khách hàng")
+        self.verify_customer_name_entry.configure(state="readonly")
+        self.signature_label.config(image="", text="Chưa có ảnh chữ ký được chọn")

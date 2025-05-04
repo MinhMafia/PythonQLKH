@@ -11,7 +11,7 @@ khachHangBUS = KhachHangBUS()
 
 def load_khach_hang():
     customers = khachHangBUS.get_khach_hang_all()
-    print("load_khach_hang result:", [c.__dict__ for c in customers])  # Log dữ liệu trả về
+    # print("load_khach_hang result:", [c.__dict__ for c in customers])  # Log dữ liệu trả về
     return customers
 
 def check_sdt_exists(sdt, exclude_mkh=None):
@@ -43,14 +43,14 @@ def Customer(frame_right):
         search.delete(0, "end")
 
     def reload_search():
-        print("Reloading customer list from database")  # Log để kiểm tra
+        # print("Reloading customer list from database")  # Log để kiểm tra
         customers.clear()  # Xóa danh sách hiện tại
         customers.extend(load_khach_hang())  # Tải danh sách mới từ BUS
         search.delete(0, "end")  # Xóa ô tìm kiếm
         update_table()  # Cập nhật bảng
         if not customers:
             messagebox.showinfo("Thông báo", "Không có khách hàng nào trong cơ sở dữ liệu.")
-        print("Reloaded customers:", [c.__dict__ for c in customers])  # Log danh sách sau khi tải
+        # print("Reloaded customers:", [c.__dict__ for c in customers])  # Log danh sách sau khi tải
 
     def update_table(filter_value=None):
         table.delete(*table.get_children())
@@ -93,7 +93,7 @@ def Customer(frame_right):
 
         # Điền dữ liệu vào form
         if prefill_data:
-            print("Prefill data:", prefill_data.__dict__)  # Log dữ liệu prefill_data
+            # print("Prefill data:", prefill_data.__dict__)  # Log dữ liệu prefill_data
             fields["Mã Căn cước công dân"].insert(0, prefill_data.CCCD or "")
             fields["Họ và Tên"].insert(0, prefill_data.HOTEN or "")
             fields["SĐT"].insert(0, prefill_data.SDT or "")
@@ -230,7 +230,7 @@ def Customer(frame_right):
         print("Selected MKH:", data[0])  # Log MKH được chọn
         try:
             customer = khachHangBUS.find_khach_hang_by_ma_khach_hang(int(data[0]))
-            print("Customer data:", customer.__dict__ if customer else None)  # Log dữ liệu khách hàng
+            # print("Customer data:", customer.__dict__ if customer else None)  # Log dữ liệu khách hàng
             if customer:
                 open_customer_window(f"{'Chi tiết' if mode == 'detail' else 'Sửa'} khách hàng", mode=mode, prefill_data=customer)
             else:
@@ -295,8 +295,8 @@ def Customer(frame_right):
     columns = ("MKH", "Họ và Tên", "SĐT", "CCCD", "Ngày tham gia", "Trạng thái")
 
     style = ttk.Style()
-    style.configure("Treeview", font=("Arial", 14))
-    style.configure("Treeview.Heading", font=("Arial", 16, "bold"))
+    style.configure("Treeview", font=("Arial", 11))
+    style.configure("Treeview.Heading", font=("Arial", 13, "bold"))
 
     table = ttk.Treeview(frame_body, columns=columns, show="headings", height=20)
     table.bind("<<TreeviewSelect>>", on_select)
