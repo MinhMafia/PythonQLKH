@@ -187,7 +187,7 @@ class Staff_home:
         )
         btn_generate_report.grid(row=0, column=2, padx=15, pady=15)
 
-    def view_transactions(frame_right, giao_dich_bus):
+    def view_transactions(self, frame_right, giao_dich_bus):
         main_frame = ctk.CTkFrame(frame_right, fg_color="transparent")
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -255,7 +255,7 @@ class Staff_home:
         transactions = giao_dich_bus.get_giao_dich_all()
         update_table(transactions)
 
-    def update_transaction_status(frame_right, giao_dich_bus, khach_hang_bus):
+    def update_transaction_status(self, frame_right, giao_dich_bus, khach_hang_bus):
         main_frame = ctk.CTkFrame(frame_right, fg_color="transparent")
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -329,7 +329,7 @@ class Staff_home:
 
 
 
-    def generate_report(frame_right, giao_dich_bus):
+    def generate_report(self, frame_right, giao_dich_bus):
         main_frame = ctk.CTkFrame(frame_right, fg_color="transparent")
         main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
