@@ -14,12 +14,15 @@ class CTQuyenBUS:
     def get_ct_quyen_by_mnq(self, mnq):
         # Lấy trực tiếp từ cơ sở dữ liệu thay vì danh sách
         result = ChiTietQuyenDAO.select_by_mnq(mnq)
-        print(f"CTQuyen for MNQ {mnq}: {[ctq.__dict__ for ctq in result]}")
+        # print(f"CTQuyen for MNQ {mnq}: {[ctq.__dict__ for ctq in result]}")
         return result
 
     def get_ct_quyen_by_mcn(self, mcn):
         return [ctq for ctq in self.listCTQuyen if ctq.MCN == mcn]
 
+    def get_ct_quyen_by_mnq_and_mcn(self, mnq, mcn):
+        return [ctq for ctq in self.listCTQuyen if ctq.MNQ == mnq and ctq.MCN == mcn]
+    
     def add_ct_quyen(self, ctq):
         print(f"Adding CTQuyenDTO: {ctq.__dict__}")
         result = ChiTietQuyenDAO.get_instance().insert(ctq)

@@ -108,11 +108,11 @@ class Home:
                         from verification_new import SignatureVerificationApp
                         SignatureVerificationApp(frame_right)
                     case "Customer":
-                        KhachHang.Customer(frame_right)
+                        KhachHang.Customer(frame_right, self.user)
                     case "Staff":
-                        NhanVien.Staff(frame_right)
+                        NhanVien.Staff(frame_right, self.user)
                     case "Account":
-                        TaiKhoan.Account(frame_right)
+                        TaiKhoan.Account(frame_right, self.user)
                     case "TransactionRequest":
                         # label = ctk.CTkLabel(frame_right, text="Yêu cầu giao dịch", font=("Arial", 50))
                         TransactionRequestApp(frame_right, self.user)

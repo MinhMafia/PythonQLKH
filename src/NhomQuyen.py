@@ -67,14 +67,14 @@ def NhomQuyen(frame_right):
             label = ctk.CTkLabel(form_frame, text=f"{label_text}:", font=("Arial", 14))
             label.pack(pady=5)
             entry = ctk.CTkEntry(form_frame, width=300)
-            if mode == "detail":
-                entry.configure(state="disabled")
             entry.pack(pady=5)
             fields[label_text] = entry
 
         # Điền dữ liệu vào trường Tên nhóm quyền
         if prefill_data:
             fields["Tên nhóm quyền"].insert(0, prefill_data.TEN)
+            fields["Tên nhóm quyền"].configure(state="disabled")
+
 
         # Bảng checkbox cho quyền
         table_frame = ctk.CTkFrame(win, fg_color="transparent")
@@ -224,8 +224,22 @@ def NhomQuyen(frame_right):
 
     def on_select(event):
         btn_detail.configure(state="normal")
-        btn_edit.configure(state="normal")
-        btn_delete.configure(state="normal")
+        
+        selected = table.selection()
+        if not selected:
+            return
+        
+        data = table.item(selected[0], "values")
+        ten_nhom_quyen = data[1].strip().lower()
+
+        print(f"Selected group: {ten_nhom_quyen}")
+
+        if ten_nhom_quyen == "quản lý tổng":
+            # btn_edit.configure(state="disabled")
+            btn_delete.configure(state="disabled")
+        else:
+            btn_edit.configure(state="normal")
+            btn_delete.configure(state="normal")
 
     frame_right.master.title("Quản lý nhóm quyền")
 

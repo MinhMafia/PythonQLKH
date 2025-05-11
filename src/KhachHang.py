@@ -1,13 +1,16 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
+from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from BUS.KhachHangBUS import KhachHangBUS
 from DTO.KhachHangDTO import KhachHangDTO  # Sửa import
 import re
 from datetime import datetime
 from mysql.connector import Error
 import component as comp
+from unidecode import unidecode
 
+quanLyKhachHang = CTQuyenBUS()
 khachHangBUS = KhachHangBUS()
 
 def load_khach_hang():
@@ -31,7 +34,11 @@ def check_email_exists(email, exclude_mkh=None):
             return True
     return False
 
-def Customer(frame_right):
+def Customer(frame_right, user):
+    current_MNQ = user.MNQ
+
+    listQuyenKhachHang = quanLyKhachHang.get_ct_quyen_by_mnq_and_mcn(current_MNQ, "khachhang")
+
     customers = load_khach_hang()
 
     def search_entry_event(event=None):
@@ -44,7 +51,6 @@ def Customer(frame_right):
         search.delete(0, "end")
 
     def reload_search():
-        # print("Reloading customer list from database")  # Log để kiểm tra
         customers.clear()  # Xóa danh sách hiện tại
         customers.extend(load_khach_hang())  # Tải danh sách mới từ BUS
         search.delete(0, "end")  # Xóa ô tìm kiếm
@@ -59,9 +65,9 @@ def Customer(frame_right):
             customers.extend(load_khach_hang())  # Tải lại nếu danh sách rỗng
         for customer in customers:
             if not filter_value or (
-                filter_value in customer.HOTEN.lower() or 
-                filter_value in customer.SDT.lower() or 
-                filter_value in (customer.CCCD.lower() if customer.CCCD else "")
+                unidecode(filter_value) in unidecode(customer.HOTEN.lower()) or 
+                unidecode(filter_value) in unidecode(customer.SDT.lower()) or 
+                unidecode(filter_value) in unidecode(customer.CCCD.lower() if customer.CCCD else "")
             ):
                 status = ("Bị khóa" if customer.TT == 0 else 
                          "Hoạt động" if customer.TT == 1 else 
@@ -309,13 +315,21 @@ def Customer(frame_right):
     frame_buttons = ctk.CTkFrame(frame_head, fg_color="transparent")
     frame_buttons.pack(side="right", padx=10, pady=10)
 
-    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addCustomer_window).pack(side="left", padx=10)
-    btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit"), state="disabled")
-    btn_edit.pack(side="left", padx=10)
-    btn_delete = ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80, command=delete_selected_customer, state="disabled")
-    btn_delete.pack(side="left", padx=10)
-    btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"), state="disabled")
-    btn_detail.pack(side="left", padx=10)
+    if any(q.HANHDONG == "create" for q in listQuyenKhachHang):
+        btn_add = ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addCustomer_window)
+        btn_add.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "update" for q in listQuyenKhachHang):
+        btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit"), state="disabled")
+        btn_edit.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "delete" for q in listQuyenKhachHang):
+        btn_delete = ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80, command=delete_selected_customer, state="disabled")
+        btn_delete.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "view" for q in listQuyenKhachHang):
+        btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"), state="disabled")
+        btn_detail.pack(side="left", padx=10)
 
     columns = ("MKH", "Họ và Tên", "SĐT", "CCCD", "Ngày tham gia", "Trạng thái")
 

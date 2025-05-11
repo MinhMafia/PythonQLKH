@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 from tkinter import messagebox
+from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from BUS.TaiKhoanBUS import TaiKhoanBUS
 from BUS.NhanVienBUS import NhanVienBUS  # Nhập để kiểm tra MNV
 import component as comp
@@ -9,11 +10,16 @@ from login import hash_password  # Nhập hàm hash_password từ login.py
 
 AccountBUS = TaiKhoanBUS()
 NhanVienBUS = NhanVienBUS()
+quanLyTaiKhoan = CTQuyenBUS()
+
 
 def load_tai_khoan():
     return TaiKhoanBUS.get_tai_khoan_all()
 
 def Account(frame_right):
+    current_MNQ = user.MNQ
+    listQuyenTaiKhoan = quanLyTaiKhoan.get_ct_quyen_by_mnq_and_mcn(current_MNQ, "taikhoan")
+
     accounts = load_tai_khoan()
 
     def update_table(filter_value=None):
@@ -170,8 +176,9 @@ def Account(frame_right):
         if not selected:
             messagebox.showwarning("Cảnh báo", "Vui lòng chọn một tài khoản!")
             return
-
+        
         data = table.item(selected[0], "values")
+
         if mode == "detail":
             open_account_window("Chi tiết tài khoản",
                                 disabled_fields=["Mã nhân viên", "Tên đăng nhập", "Mã nhóm quyền", "Trạng thái"],
@@ -180,6 +187,23 @@ def Account(frame_right):
             open_account_window("Sửa thông tin tài khoản",
                                 disabled_fields=["Mã nhân viên"],
                                 prefill_data=data)
+    
+    def on_select(event):
+        btn_detail.configure(state="normal")
+        
+        selected = table.selection()
+        if not selected:
+            return
+        
+        data = table.item(selected[0], "values")
+        tenTaiKhoan = data[1].strip().lower()
+
+        if tenTaiKhoan == "admin":
+            btn_edit.configure(state="disabled")
+            btn_delete.configure(state="disabled")
+        else:
+            btn_edit.configure(state="normal")
+            btn_delete.configure(state="normal")
 
     frame_right.master.title("Quản lý tài khoản")
 
@@ -202,11 +226,20 @@ def Account(frame_right):
     frame_buttons = ctk.CTkFrame(frame_head, fg_color="transparent")
     frame_buttons.pack(side="right", padx=10, pady=10)
 
-    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=lambda: open_addaccount_window("Thêm tài khoản")).pack(side="left", padx=10)
-    ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_account(mode="edit")).pack(side="left", padx=10)
-    ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80).pack(side="left", padx=10)
-    btnDetail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_account(mode="detail"))
-    btnDetail.pack(side="left", padx=10)
+    if any(q.HANHDONG == "create" for q in listQuyenTaiKhoan):
+        ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=lambda: open_addaccount_window("Thêm tài khoản")).pack(side="left", padx=10)
+    
+    if any(q.HANHDONG == "update" for q in listQuyenTaiKhoan):    
+        btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_account(mode="edit"), state="disabled")
+        btn_edit.pack(side="left", padx=10)
+    
+    if any(q.HANHDONG == "delete" for q in listQuyenTaiKhoan):
+        btn_delete = ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80, state="disabled")
+        btn_delete.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "view" for q in listQuyenTaiKhoan):
+        btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_account(mode="detail"), state="disabled")
+        btn_detail.pack(side="left", padx=10)
 
     columns = ("MNV", "Tên đăng nhập", "Mã nhóm quyền", "Trạng thái")
 
@@ -215,6 +248,8 @@ def Account(frame_right):
     style.configure("Treeview.Heading", font=("Arial", 16, "bold"))
 
     table = ttk.Treeview(frame_body, columns=columns, show="headings", height=20)
+    table.bind("<<TreeviewSelect>>", on_select)
+
 
     for col in columns:
         table.heading(col, text=col)

@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
+from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from BUS.NhanVienBUS import NhanVienBUS
 from DTO.NhanVienDTO import NhanVienDTO
 import re
@@ -8,6 +9,8 @@ from datetime import datetime
 from mysql.connector import Error
 
 StaffBUS = NhanVienBUS()
+quanLyNhanVien = CTQuyenBUS()
+
 
 # Danh sách chức vụ mẫu (lấy từ bảng CHUCVU)
 CHUC_VU = {
@@ -44,7 +47,12 @@ def check_email_exists(email, exclude_mnv=None):
             return True
     return False
 
-def Staff(frame_right):
+def Staff(frame_right, user):
+
+    current_MNQ = user.MNQ
+
+    listQuyenNhanVien = quanLyNhanVien.get_ct_quyen_by_mnq_and_mcn(current_MNQ, "nhanvien")
+
     staffs = load_nhan_vien()
 
     def search_entry_event(event=None):
@@ -57,7 +65,6 @@ def Staff(frame_right):
         search.delete(0, "end")
 
     def reload_search():
-        print("Reloading staff list from database")  # Log để kiểm tra
         staffs.clear()  # Xóa danh sách hiện tại
         staffs.extend(load_nhan_vien())  # Tải danh sách mới từ BUS
         search.delete(0, "end")  # Xóa ô tìm kiếm
@@ -71,8 +78,13 @@ def Staff(frame_right):
         if not staffs:
             staffs.extend(load_nhan_vien())  # Tải lại nếu danh sách rỗng
         for staff in staffs:
-            if not filter_value or filter_value in str(staff).lower():
-                status = TRANG_THAI.get(staff.TT, "Không xác định")
+            if not filter_value or (
+                unidecode(filter_value) in unidecode(staff.HOTEN.lower()) or
+                unidecode(filter_value) in unidecode(staff.SDT.lower()) 
+            ):
+                status = ("Bị khóa" if staff.TT == 0 else 
+                         "Hoạt động" if staff.TT == 1 else 
+                         "Chưa xác thực")
                 table.insert("", "end", values=(
                     staff.MNV, staff.HOTEN, staff.SDT, staff.EMAIL,
                     staff.NGAYSINH, status))
@@ -329,13 +341,20 @@ def Staff(frame_right):
     frame_buttons = ctk.CTkFrame(frame_head, fg_color="transparent")
     frame_buttons.pack(side="right", padx=10, pady=10)
 
-    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addStaff_window).pack(side="left", padx=10)
-    btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_staff(mode="edit"), state="disabled")
-    btn_edit.pack(side="left", padx=10)
-    btn_delete = ctk.CTkButton(frame_buttons, text="❌ Khóa", width=80, command=delete_selected_staff, state="disabled")
-    btn_delete.pack(side="left", padx=10)
-    btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_staff(mode="detail"), state="disabled")
-    btn_detail.pack(side="left", padx=10)
+    if any(q.HANHDONG == "create" for q in listQuyenNhanVien):
+        ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addStaff_window).pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "update" for q in listQuyenNhanVien):
+        btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_staff(mode="edit"), state="disabled")
+        btn_edit.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "delete" for q in listQuyenNhanVien):    
+        btn_delete = ctk.CTkButton(frame_buttons, text="❌ Khóa", width=80, command=delete_selected_staff, state="disabled")
+        btn_delete.pack(side="left", padx=10)
+        
+    if any(q.HANHDONG == "view" for q in listQuyenNhanVien):
+        btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_staff(mode="detail"), state="disabled")
+        btn_detail.pack(side="left", padx=10)
 
     columns = ("MNV", "Họ và Tên", "SĐT", "Email", "Ngày sinh", "Trạng thái")
 
