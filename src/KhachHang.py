@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
-from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from BUS.KhachHangBUS import KhachHangBUS
 from DTO.KhachHangDTO import KhachHangDTO  # Sửa import
 import re
@@ -10,7 +9,6 @@ from mysql.connector import Error
 import component as comp
 from unidecode import unidecode
 
-quanLyKhachHang = CTQuyenBUS()
 khachHangBUS = KhachHangBUS()
 
 def load_khach_hang():
@@ -34,10 +32,9 @@ def check_email_exists(email, exclude_mkh=None):
             return True
     return False
 
-def Customer(frame_right, user):
-    current_MNQ = user.MNQ
+def Customer(frame_right, quyenKhachHang):
 
-    listQuyenKhachHang = quanLyKhachHang.get_ct_quyen_by_mnq_and_mcn(current_MNQ, "khachhang")
+    listQuyenKhachHang = quyenKhachHang
 
     customers = load_khach_hang()
 

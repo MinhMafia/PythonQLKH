@@ -12,7 +12,11 @@ from YeuCauGiaoDich import TransactionRequestApp
 # from verification import load_verification_interface
 # from verification_new import load_verification_interface
 from BUS.NhomQuyenBUS import NhomQuyenBUS
+from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from NhomQuyen import NhomQuyen
+
+listQuyen = CTQuyenBUS()
+
 class Home:
     def __init__(self):
         self.user = None
@@ -109,11 +113,14 @@ class Home:
                         from verification_new import SignatureVerificationApp
                         SignatureVerificationApp(frame_right)
                     case "Customer":
-                        KhachHang.Customer(frame_right, self.user)
+                        listQuyenKhachHang = listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "khachhang")
+                        KhachHang.Customer(frame_right, listQuyenKhachHang)
                     case "Staff":
-                        NhanVien.Staff(frame_right, self.user)
+                        listQuyenNhanVien = listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "nhanvien")
+                        NhanVien.Staff(frame_right, listQuyenNhanVien)
                     case "Account":
-                        TaiKhoan.Account(frame_right, self.user)
+                        listQuyenTaiKhoan = listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "taikhoan")
+                        TaiKhoan.Account(frame_right, listQuyenTaiKhoan)
                     case "TransactionRequest":
                         # label = ctk.CTkLabel(frame_right, text="Yêu cầu giao dịch", font=("Arial", 50))
                         TransactionRequestApp(frame_right, self.user)

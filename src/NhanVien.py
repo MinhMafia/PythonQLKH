@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
-from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from BUS.NhanVienBUS import NhanVienBUS
 from DTO.NhanVienDTO import NhanVienDTO
 import re
@@ -9,7 +8,6 @@ from datetime import datetime
 from mysql.connector import Error
 
 StaffBUS = NhanVienBUS()
-quanLyNhanVien = CTQuyenBUS()
 
 
 # Danh sách chức vụ mẫu (lấy từ bảng CHUCVU)
@@ -47,11 +45,10 @@ def check_email_exists(email, exclude_mnv=None):
             return True
     return False
 
-def Staff(frame_right, user):
+def Staff(frame_right, quyenNhanVien):
 
-    current_MNQ = user.MNQ
 
-    listQuyenNhanVien = quanLyNhanVien.get_ct_quyen_by_mnq_and_mcn(current_MNQ, "nhanvien")
+    listQuyenNhanVien = quyenNhanVien
 
     staffs = load_nhan_vien()
 

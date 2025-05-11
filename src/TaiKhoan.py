@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import tkinter.ttk as ttk
 from tkinter import messagebox
-from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from BUS.TaiKhoanBUS import TaiKhoanBUS
 from BUS.NhanVienBUS import NhanVienBUS  # Nhập để kiểm tra MNV
 import component as comp
@@ -10,15 +9,13 @@ from login import hash_password  # Nhập hàm hash_password từ login.py
 
 AccountBUS = TaiKhoanBUS()
 NhanVienBUS = NhanVienBUS()
-quanLyTaiKhoan = CTQuyenBUS()
 
 
 def load_tai_khoan():
     return TaiKhoanBUS.get_tai_khoan_all()
 
-def Account(frame_right):
-    current_MNQ = user.MNQ
-    listQuyenTaiKhoan = quanLyTaiKhoan.get_ct_quyen_by_mnq_and_mcn(current_MNQ, "taikhoan")
+def Account(frame_right, quyenTaiKhoan):
+    listQuyenTaiKhoan = quyenTaiKhoan
 
     accounts = load_tai_khoan()
 
