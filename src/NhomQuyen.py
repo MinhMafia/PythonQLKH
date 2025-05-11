@@ -235,7 +235,7 @@ def NhomQuyen(frame_right):
         print(f"Selected group: {ten_nhom_quyen}")
 
         if ten_nhom_quyen == "quản lý tổng":
-            # btn_edit.configure(state="disabled")
+            btn_edit.configure(state="normal")
             btn_delete.configure(state="disabled")
         else:
             btn_edit.configure(state="normal")
