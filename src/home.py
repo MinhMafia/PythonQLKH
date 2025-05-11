@@ -15,7 +15,6 @@ from BUS.NhomQuyenBUS import NhomQuyenBUS
 from BUS.ChiTietQuyenBUS import CTQuyenBUS
 from NhomQuyen import NhomQuyen
 
-listQuyen = CTQuyenBUS()
 
 class Home:
     def __init__(self):
@@ -113,13 +112,16 @@ class Home:
                         from verification_new import SignatureVerificationApp
                         SignatureVerificationApp(frame_right)
                     case "Customer":
-                        listQuyenKhachHang = listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "khachhang")
+                        listQuyenBus = CTQuyenBUS()
+                        listQuyenKhachHang = listQuyenBus.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "khachhang")
                         KhachHang.Customer(frame_right, listQuyenKhachHang)
                     case "Staff":
-                        listQuyenNhanVien = listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "nhanvien")
+                        listQuyenBus = CTQuyenBUS()
+                        listQuyenNhanVien = listQuyenBus.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "nhanvien")
                         NhanVien.Staff(frame_right, listQuyenNhanVien)
                     case "Account":
-                        listQuyenTaiKhoan = listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "taikhoan")
+                        listQuyenBus = CTQuyenBUS()
+                        listQuyenTaiKhoan = listQuyenBus.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "taikhoan")
                         TaiKhoan.Account(frame_right, listQuyenTaiKhoan)
                     case "TransactionRequest":
                         # label = ctk.CTkLabel(frame_right, text="Yêu cầu giao dịch", font=("Arial", 50))
