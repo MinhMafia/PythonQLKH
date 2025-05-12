@@ -109,6 +109,7 @@ VALUES
         (1, 'chucvu', 'delete'),
         (1, 'chucvu', 'update'),
         (1, 'chucvu', 'view'),
+        (1, 'xacminh', 'create'),
         (1, 'nhomquyen', 'create'),
         (1, 'nhomquyen', 'delete'),
         (1, 'nhomquyen', 'update'),

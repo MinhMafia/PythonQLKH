@@ -6,13 +6,17 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 
 import component as comp
-import KhachHang, NhanVien, TaiKhoan
+import KhachHang, NhanVien, TaiKhoan, ChucVu
 import login
 from YeuCauGiaoDich import TransactionRequestApp
+from XemGiaoDich import view_transactions
+from BaoCao import generate_report
 # from verification import load_verification_interface
 # from verification_new import load_verification_interface
 from BUS.NhomQuyenBUS import NhomQuyenBUS
 from BUS.ChiTietQuyenBUS import CTQuyenBUS
+from BUS.GiaoDichBUS import GiaoDichBUS
+from BUS.KhachHangBUS import KhachHangBUS
 from NhomQuyen import NhomQuyen
 
 
@@ -83,6 +87,10 @@ class Home:
 
         frame_right = ctk.CTkFrame(root, width=750, height=650)
         frame_right.pack(side="right", fill="both", expand=True)
+        
+        giao_dich_bus = GiaoDichBUS()
+        khach_hang_bus = KhachHangBUS()
+
 
         def Home():
             # Tải ảnh từ file
@@ -94,22 +102,15 @@ class Home:
             label = ctk.CTkLabel(frame_right, image=home_image, text="")
             label.pack(expand=True)
 
-        def Verify():
-            label = ctk.CTkLabel(frame_right, text="Xác Minh", font=("Arial", 50))
-            label.pack(expand=True)
-
         # Hàm chuyển trang
         def show_frame(page):
             for widget in frame_right.winfo_children():
                 widget.destroy()  # Xóa nội dung cũ
-
             try:
                 match page:
                     case "Home":
                         Home()
                     case "Verify":
-                        # Verify()
-                        # load_verification_interface(frame_right)
                         from verification_new import SignatureVerificationApp
                         SignatureVerificationApp(frame_right)
                     case "Customer":
@@ -120,6 +121,10 @@ class Home:
                         listQuyenBus = CTQuyenBUS()
                         listQuyenNhanVien = listQuyenBus.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "nhanvien")
                         NhanVien.Staff(frame_right, listQuyenNhanVien)
+                    case "ChucVu":
+                        listQuyenBus = CTQuyenBUS()
+                        listQuyenChucVu = listQuyenBus.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "chucvu")
+                        ChucVu.ChucVu(frame_right, listQuyenChucVu)
                     case "Account":
                         listQuyenBus = CTQuyenBUS()
                         listQuyenTaiKhoan = listQuyenBus.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "taikhoan")
@@ -129,12 +134,21 @@ class Home:
                         TransactionRequestApp(frame_right, self.user)
                     case "NhomQuyen":
                         NhomQuyen(frame_right)
+                    case "ViewTransactions":
+                        view_transactions(frame_right, giao_dich_bus)
+                    case "GenerateReport":
+                        generate_report(frame_right, giao_dich_bus)
                     case _:
                         raise ValueError("Trang không tồn tại")
             except Exception as e:
                 label = ctk.CTkLabel(frame_right, text=f"❌ Lỗi: {e}", font=("Arial", 20), text_color="red")
                 label.pack(expand=True)
 
+
+        
+
+        
+        
         # Hàm đăng xuất
         def logout():
             for widget in root.winfo_children():
@@ -251,37 +265,54 @@ class Home:
 
 
         # Thêm nút vào khung trái
-        btnHome = ctk.CTkButton(frame_left_menu, text="🏠    Trang chủ    ", command=lambda: show_frame("Home"))
+        btnHome = ctk.CTkButton(frame_left_menu, text="🏠    Trang chủ", command=lambda: show_frame("Home"))
         btnHome.pack(pady=10, padx=20)
 
-        btnVerify = ctk.CTkButton(frame_left_menu, text="✅   Xác Minh   ", command=lambda: show_frame("Verify"))
-        btnVerify.pack(pady=10, padx=20)
+        checkXacMinh = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "xacminh")
+        if checkXacMinh:
+            btnVerify = ctk.CTkButton(frame_left_menu, text="✅     Xác Minh   ", command=lambda: show_frame("Verify"))
+            btnVerify.pack(pady=10, padx=20)
 
         checkQuyenKhachHang = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "khachhang")
         if checkQuyenKhachHang:
-            btnCustomer = ctk.CTkButton(frame_left_menu, text="👤   Khách hàng   ", command=lambda: show_frame("Customer"))
+            btnCustomer = ctk.CTkButton(frame_left_menu, text="👤      Khách hàng", command=lambda: show_frame("Customer"))
             btnCustomer.pack(pady=10, padx=20)
 
         checkQuyenNhanVien = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "nhanvien")
         if checkQuyenNhanVien:
-            btnStaff = ctk.CTkButton(frame_left_menu, text="🧑‍💼   Nhân viên", command=lambda: show_frame("Staff"))
+            btnStaff = ctk.CTkButton(frame_left_menu, text="🧑‍💼       Nhân viên", command=lambda: show_frame("Staff"))
             btnStaff.pack(pady=10, padx=20)
 
         checkQuyenTaiKhoan = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "taikhoan")
         if checkQuyenTaiKhoan:
-            btnAccount = ctk.CTkButton(frame_left_menu, text="🔐  Tài khoản    ", command=lambda: show_frame("Account"))
+            btnAccount = ctk.CTkButton(frame_left_menu, text="🔐    Tài khoản", command=lambda: show_frame("Account"))
             btnAccount.pack(pady=10, padx=20)
 
-        btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="📬 Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
-        btn_TransactionRequest.pack(pady=10, padx=20)
+        checkQuyenChucVu = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "chucvu")
+        if checkQuyenChucVu:
+            btnChucVu = ctk.CTkButton(frame_left_menu, text="🔐   Chức vụ", command=lambda: show_frame("ChucVu"))
+            btnChucVu.pack(pady=10, padx=20)
+
+        checkQuyenGiaoDich = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "giaodich")
+        if any(q.HANHDONG == "create" for q in checkQuyenGiaoDich):
+            btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="📬 Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
+            btn_TransactionRequest.pack(pady=10, padx=20)
 
         btn_NhomQuyen = ctk.CTkButton(frame_left_menu, text="🛡️ Nhóm quyền   ", command=lambda: show_frame("NhomQuyen"))
         btn_NhomQuyen.pack(pady=10, padx=20)
 
+        if any(q.HANHDONG == "view" for q in checkQuyenGiaoDich):
+            btnView = ctk.CTkButton(frame_left_menu, text="📋 Xem giao dịch",  corner_radius=8, command=lambda: show_frame("ViewTransactions"))
+            btnView.pack(pady=10, padx=20, fill="x")
+
+        btnReport = ctk.CTkButton(frame_left_menu, text="📊     Báo cáo", corner_radius=8, command=lambda: show_frame("GenerateReport"))
+        # btnReport = ctk.CTkButton(frame_left_menu, text="📊 Báo cáo", font=("Arial", 14), fg_color="#EF233C", hover_color="#D90429", corner_radius=8, command=lambda: show_frame("GenerateReport"))
+        btnReport.pack(pady=10, padx=20, fill="x")
+
 
 
         """"Đăng xuất"""
-        btnLogout = ctk.CTkButton(frame_left_menu, text="Đăng xuất", command=logout)
+        btnLogout = ctk.CTkButton(frame_left_menu, text="Đăng xuất", font=("Arial", 14), fg_color="#EF233C", hover_color="#D90429", command=logout)
         btnLogout.pack(side="bottom", pady=10, padx=20)
 
         show_frame("Home")
