@@ -52,7 +52,7 @@ def NhomQuyen(frame_right):
         print(f"Opening window with title: {title}, mode: {mode}, prefill_data: {prefill_data.__dict__ if prefill_data else None}")
         win = ctk.CTkToplevel(frame_right)
         win.title(title)
-        win.geometry("600x500")
+        win.geometry("600x550")
         win.grab_set()
 
         ctk.CTkLabel(win, text=title, font=("Arial", 18, "bold")).pack(pady=10)

@@ -152,8 +152,8 @@ def Customer(frame_right, quyenKhachHang):
                 return False
             if mode == "add":  # Chỉ kiểm tra CCCD khi thêm
                 cccd = fields["Mã Căn cước công dân"].get().strip()
-                if not re.match(r"^[0-9]{11}$", cccd):
-                    messagebox.showerror("Lỗi", "CCCD phải là 11 chữ số.")
+                if not re.match(r"^[0-9]{12}$", cccd):
+                    messagebox.showerror("Lỗi", "CCCD phải là 12 chữ số.")
                     return False
             hoten = fields["Họ và Tên"].get().strip()
             if len(hoten) > 255:
