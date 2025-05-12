@@ -118,8 +118,9 @@ def Customer(frame_right, quyenKhachHang):
             fields["SĐT"].insert(0, prefill_data.SDT or "")
             fields["Email"].insert(0, prefill_data.EMAIL or "")
             fields["Địa chỉ"].insert(0, prefill_data.DIACHI or "")
-            fields["Ngày tham gia"].insert(0, prefill_data.NGAYTHAMGIA or "")
-            fields["Số tiền"].insert(0, prefill_data.TIEN or 0)
+            if (mode != "edit"):
+                fields["Ngày tham gia"].insert(0, prefill_data.NGAYTHAMGIA or "")
+                fields["Số tiền"].insert(0, prefill_data.TIEN or 0)
 
         # Vô hiệu hóa các entry sau khi điền dữ liệu
         if mode == "detail":    

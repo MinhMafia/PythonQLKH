@@ -19,6 +19,7 @@ from NhomQuyen import NhomQuyen
 class Home:
     def __init__(self):
         self.user = None
+        self.listQuyen = None
 
     ctk.set_appearance_mode("dark")  # Chế độ tối
     ctk.set_default_color_theme("blue")  # Chủ đề màu xanh
@@ -208,7 +209,8 @@ class Home:
             ctk.CTkButton(btn_frame, text="Xác nhận", fg_color="green", command=update_account).pack(side="right", padx=10)
             ctk.CTkButton(btn_frame, text="Hủy bỏ", fg_color="gray", command=close_window).pack(side="left", padx=10)
         
-        
+
+        self.listQuyen = CTQuyenBUS()
 
         # Chia frame_left thanh 2
         frame_left_account = ctk.CTkFrame(frame_left, width=250, height=100)
@@ -255,14 +257,20 @@ class Home:
         btnVerify = ctk.CTkButton(frame_left_menu, text="✅   Xác Minh   ", command=lambda: show_frame("Verify"))
         btnVerify.pack(pady=10, padx=20)
 
-        btnCustomer = ctk.CTkButton(frame_left_menu, text="👤   Khách hàng   ", command=lambda: show_frame("Customer"))
-        btnCustomer.pack(pady=10, padx=20)
+        checkQuyenKhachHang = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "khachhang")
+        if checkQuyenKhachHang:
+            btnCustomer = ctk.CTkButton(frame_left_menu, text="👤   Khách hàng   ", command=lambda: show_frame("Customer"))
+            btnCustomer.pack(pady=10, padx=20)
 
-        btnStaff = ctk.CTkButton(frame_left_menu, text="🧑‍💼   Nhân viên", command=lambda: show_frame("Staff"))
-        btnStaff.pack(pady=10, padx=20)
+        checkQuyenNhanVien = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "nhanvien")
+        if checkQuyenNhanVien:
+            btnStaff = ctk.CTkButton(frame_left_menu, text="🧑‍💼   Nhân viên", command=lambda: show_frame("Staff"))
+            btnStaff.pack(pady=10, padx=20)
 
-        btnAccount = ctk.CTkButton(frame_left_menu, text="🔐  Tài khoản    ", command=lambda: show_frame("Account"))
-        btnAccount.pack(pady=10, padx=20)
+        checkQuyenTaiKhoan = self.listQuyen.get_ct_quyen_by_mnq_and_mcn(self.user.MNQ, "taikhoan")
+        if checkQuyenTaiKhoan:
+            btnAccount = ctk.CTkButton(frame_left_menu, text="🔐  Tài khoản    ", command=lambda: show_frame("Account"))
+            btnAccount.pack(pady=10, padx=20)
 
         btn_TransactionRequest = ctk.CTkButton(frame_left_menu, text="📬 Yêu cầu giao dịch", command=lambda: show_frame("TransactionRequest"))
         btn_TransactionRequest.pack(pady=10, padx=20)
