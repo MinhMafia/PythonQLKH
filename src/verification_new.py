@@ -515,6 +515,10 @@ class SignatureVerificationApp:
             filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")]
         )
         if file:
+            # Đảm bảo thư mục current_dir tồn tại
+            if not os.path.exists(current_dir):
+                os.makedirs(current_dir, exist_ok=True)
+                
             dest_path = os.path.join(current_dir, "current_signature.jpg")
             shutil.copy2(file, dest_path)
             self.signature_label.config(text=f"Đã chọn: {os.path.basename(file)}")

@@ -24,3 +24,7 @@ class NhomQuyenDTO:
 
     def set_TT(self, new_TT):
         self.TT = new_TT
+
+
+    def __str__(self):
+        return f"NhomQuyenDTO(MNQ={self.MNQ}, TEN={self.TEN}, TT={self.TT})"

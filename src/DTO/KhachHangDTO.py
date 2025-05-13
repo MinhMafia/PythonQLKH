@@ -98,3 +98,8 @@ class KhachHangDTO:
             self.TIEN == other.TIEN and
             self.TT == other.TT
         )
+    
+
+    def __str__(self):
+        return f"{self.MKH} {self.HOTEN} {self.SDT} {self.EMAIL} {self.CCCD} {self.DIACHI}"
+

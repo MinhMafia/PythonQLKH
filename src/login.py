@@ -12,7 +12,9 @@ import re
 
 from BUS.TaiKhoanBUS import TaiKhoanBUS
 from BUS.NhanVienBUS import NhanVienBUS
+from BUS.NhomQuyenBUS import NhomQuyenBUS
 import component
+
 
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
@@ -122,6 +124,7 @@ def fade_transition(root, callback, duration=300, new_geometry=None):
     fade_in()
 
 def login(root):
+    nhomQuyenBUS = NhomQuyenBUS()
     TDN = entry_username.get()
     MK = hash_password(entry_password.get())
     users = load_users()
@@ -129,12 +132,9 @@ def login(root):
     for user in users:
         if user.TDN == TDN and user.MK == MK:
             check = False
-            if user.MNQ == 1:
-                messagebox.showinfo("Thành công", "Đăng nhập thành công với quyền Admin!")
-                fade_transition(root, lambda: import_home_and_run(root, user), new_geometry="1000x650")
-            elif user.MNQ == 2:
-                messagebox.showinfo("Thành công", "Đăng nhập thành công với quyền Nhân viên!")
-                fade_transition(root, lambda: import_staff_home_and_run(root, user), new_geometry="1000x650")
+            tenNhomQuyen = nhomQuyenBUS.get_ten_nhom_quyen_by_mnq(user.MNQ)
+            messagebox.showinfo("Thành công", f"Đăng nhập thành công với quyền {tenNhomQuyen}!")
+            fade_transition(root, lambda: import_home_and_run(root, user), new_geometry="1000x650")
             return
     if check:
         messagebox.showerror("Lỗi", "Đăng nhập thất bại!")
@@ -149,7 +149,7 @@ def import_staff_home_and_run(root, user):
     screen = Staff_home()
     screen.staffHomeRun(root, user)
 
-def open_forgot_password_window(root):
+def open_forgot_password_window(root, current_username):
     root.withdraw()
     forgot_window = ctk.CTkToplevel(root)
     forgot_window.title("Quên mật khẩu")
@@ -179,18 +179,19 @@ def open_forgot_password_window(root):
     temp_username = None
     temp_email = None
 
-    ctk.CTkLabel(frame, text="Tên đăng nhập:", text_color="black").pack(anchor="w", pady=2)
-    entry_username = ctk.CTkEntry(frame, width=200)
-    entry_username.pack(pady=2)
+    # ctk.CTkLabel(frame, text="Tên đăng nhập:", text_color="black").pack(anchor="w", pady=2)
+    # entry_username = ctk.CTkEntry(frame, width=200)
+    # entry_username.pack(pady=2)
+    # ctk.CTkLabel(frame, text=f"Tên đăng nhập: {current_username}", text_color="black").pack(anchor="w", pady=2)
 
-    ctk.CTkLabel(frame, text="Email đã đăng ký:", text_color="black").pack(anchor="w", pady=2)
+    ctk.CTkLabel(frame, text="Email:", text_color="black").pack(anchor="w", pady=2)
     entry_email = ctk.CTkEntry(frame, width=200)
     entry_email.pack(pady=2)
 
     def send_otp_step():
         nonlocal temp_otp, temp_username, temp_email
 
-        username = entry_username.get()
+        username = current_username
         email = entry_email.get()
 
         if not username or not email:
@@ -373,7 +374,7 @@ def main(root):
     # Forgot password link
     forgot_label = ctk.CTkLabel(right_frame, text="Quên mật khẩu?", text_color="#3498db", cursor="hand2")
     forgot_label.pack(pady=4)
-    forgot_label.bind("<Button-1>", lambda e: open_forgot_password_window(root))
+    forgot_label.bind("<Button-1>", lambda e: open_forgot_password_window(root, entry_username.get()))
 
     # Login button
     btn_login = ctk.CTkButton(right_frame, text="Đăng nhập", font=("Arial", 14, "bold"), fg_color="#2ecc71", hover_color="#27ae60", corner_radius=10, command=lambda: login(root))

@@ -92,6 +92,7 @@ VALUES
         ('chucvu', 'Quản lý chức vụ', 1),
         ('nhomquyen', 'Quản lý nhóm quyền', 1),
         ('taikhoan', 'Quản lý tài khoản', 1),
+        ('xacminh', 'Quản lý xác minh', 1),
         ('giaodich', 'Quản lý giao dịch', 1);
 
 INSERT INTO `CTQUYEN` (`MNQ`, `MCN`, `HANHDONG`)
@@ -108,6 +109,7 @@ VALUES
         (1, 'chucvu', 'delete'),
         (1, 'chucvu', 'update'),
         (1, 'chucvu', 'view'),
+        (1, 'xacminh', 'create'),
         (1, 'nhomquyen', 'create'),
         (1, 'nhomquyen', 'delete'),
         (1, 'nhomquyen', 'update'),

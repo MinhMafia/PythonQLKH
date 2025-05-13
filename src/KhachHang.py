@@ -6,6 +6,8 @@ from DTO.KhachHangDTO import KhachHangDTO  # Sửa import
 import re
 from datetime import datetime
 from mysql.connector import Error
+import component as comp
+from unidecode import unidecode
 
 khachHangBUS = KhachHangBUS()
 
@@ -30,7 +32,10 @@ def check_email_exists(email, exclude_mkh=None):
             return True
     return False
 
-def Customer(frame_right):
+def Customer(frame_right, quyenKhachHang):
+
+    listQuyenKhachHang = quyenKhachHang
+
     customers = load_khach_hang()
 
     def search_entry_event(event=None):
@@ -43,7 +48,6 @@ def Customer(frame_right):
         search.delete(0, "end")
 
     def reload_search():
-        # print("Reloading customer list from database")  # Log để kiểm tra
         customers.clear()  # Xóa danh sách hiện tại
         customers.extend(load_khach_hang())  # Tải danh sách mới từ BUS
         search.delete(0, "end")  # Xóa ô tìm kiếm
@@ -57,7 +61,11 @@ def Customer(frame_right):
         if not customers:
             customers.extend(load_khach_hang())  # Tải lại nếu danh sách rỗng
         for customer in customers:
-            if not filter_value or filter_value in str(customer).lower():
+            if not filter_value or (
+                unidecode(filter_value) in unidecode(customer.HOTEN.lower()) or 
+                unidecode(filter_value) in unidecode(customer.SDT.lower()) or 
+                unidecode(filter_value) in unidecode(customer.CCCD.lower() if customer.CCCD else "")
+            ):
                 status = ("Bị khóa" if customer.TT == 0 else 
                          "Hoạt động" if customer.TT == 1 else 
                          "Chưa xác thực")
@@ -69,6 +77,7 @@ def Customer(frame_right):
         win = ctk.CTkToplevel(frame_right)
         win.title(title)
         win.geometry("400x600")
+        # comp.CanGiuaCuaSo(win, 400, 600)
         win.grab_set()
 
         ctk.CTkLabel(win, text=title, font=("Arial", 24), text_color="#00FA9A").pack(pady=10)
@@ -77,7 +86,16 @@ def Customer(frame_right):
         form_frame.pack(pady=10)
 
         fields = {}
-        labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+        labels = []
+        if(mode == "add"):
+            labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+        elif(mode == "detail"):
+            labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ","Ngày tham gia","Số tiền"]
+            win.geometry("400x700")
+            # comp.CanGiuaCuaSo(win, 400, 700)
+        elif(mode == "edit"):
+            labels = ["Mã Căn cước công dân", "Họ và Tên", "SĐT", "Email", "Địa chỉ"]
+            
         mandatory_fields = ["Họ và Tên", "SĐT"]  # Loại CCCD khỏi mandatory khi sửa
 
         for label_text in labels:
@@ -86,10 +104,11 @@ def Customer(frame_right):
             entry = ctk.CTkEntry(form_frame, width=300)
             entry.pack(pady=5)
             fields[label_text] = entry
+            
             # if mode == "detail":
-            #     entry.configure(state="disabled")
+            #     entry.configure(state="readonly")
             # elif mode == "edit" and label_text == "Mã Căn cước công dân":
-            #     entry.configure(state="disabled")
+            #     entry.configure(state="readonly")
 
         # Điền dữ liệu vào form
         if prefill_data:
@@ -99,13 +118,16 @@ def Customer(frame_right):
             fields["SĐT"].insert(0, prefill_data.SDT or "")
             fields["Email"].insert(0, prefill_data.EMAIL or "")
             fields["Địa chỉ"].insert(0, prefill_data.DIACHI or "")
+            if (mode != "edit"):
+                fields["Ngày tham gia"].insert(0, prefill_data.NGAYTHAMGIA or "")
+                fields["Số tiền"].insert(0, prefill_data.TIEN or 0)
+
         # Vô hiệu hóa các entry sau khi điền dữ liệu
-        if mode == "detail":
+        if mode == "detail":    
             for entry in fields.values():
                 entry.configure(state="disabled")
         elif mode == "edit" and "Mã Căn cước công dân" in fields:
             fields["Mã Căn cước công dân"].configure(state="disabled")
-
 
         def close_window():
             win.grab_release()
@@ -130,8 +152,8 @@ def Customer(frame_right):
                 return False
             if mode == "add":  # Chỉ kiểm tra CCCD khi thêm
                 cccd = fields["Mã Căn cước công dân"].get().strip()
-                if not re.match(r"^[0-9]{11}$", cccd):
-                    messagebox.showerror("Lỗi", "CCCD phải là 11 chữ số.")
+                if not re.match(r"^[0-9]{12}$", cccd):
+                    messagebox.showerror("Lỗi", "CCCD phải là 12 chữ số.")
                     return False
             hoten = fields["Họ và Tên"].get().strip()
             if len(hoten) > 255:
@@ -291,13 +313,21 @@ def Customer(frame_right):
     frame_buttons = ctk.CTkFrame(frame_head, fg_color="transparent")
     frame_buttons.pack(side="right", padx=10, pady=10)
 
-    ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addCustomer_window).pack(side="left", padx=10)
-    btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit"), state="disabled")
-    btn_edit.pack(side="left", padx=10)
-    btn_delete = ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80, command=delete_selected_customer, state="disabled")
-    btn_delete.pack(side="left", padx=10)
-    btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"), state="disabled")
-    btn_detail.pack(side="left", padx=10)
+    if any(q.HANHDONG == "create" for q in listQuyenKhachHang):
+        btn_add = ctk.CTkButton(frame_buttons, text="➕ Thêm", width=80, command=open_addCustomer_window)
+        btn_add.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "update" for q in listQuyenKhachHang):
+        btn_edit = ctk.CTkButton(frame_buttons, text="✏ Sửa", width=80, command=lambda: open_selected_customer(mode="edit"), state="disabled")
+        btn_edit.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "delete" for q in listQuyenKhachHang):
+        btn_delete = ctk.CTkButton(frame_buttons, text="❌ Xóa", width=80, command=delete_selected_customer, state="disabled")
+        btn_delete.pack(side="left", padx=10)
+
+    if any(q.HANHDONG == "view" for q in listQuyenKhachHang):
+        btn_detail = ctk.CTkButton(frame_buttons, text="📄 Chi tiết", width=80, command=lambda: open_selected_customer(mode="detail"), state="disabled")
+        btn_detail.pack(side="left", padx=10)
 
     columns = ("MKH", "Họ và Tên", "SĐT", "CCCD", "Ngày tham gia", "Trạng thái")
 
